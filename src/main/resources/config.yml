@@ -1,0 +1,115 @@
+debug: false
+#是否开启图片识别
+ocr-scan: true
+messagefolders:
+  - messages
+custom_messages:
+  help:
+    trigger: "help"
+    #有则未绑定用户的玩家发送此消息,无则忽略是否绑定
+    #你可以将这个配置项注释掉,以取消这个功能
+    unbind_messages:
+      - "您还没有进入过服务器，无法使用该功能"
+    responses:
+      - "[CQ:at,qq={qq}],你好"
+      - "帮助菜单[Help]"
+      - "[参数]:"
+      - "         - info"
+      - "           个人信息"
+      - "         - skin"
+      - "           皮肤更改"
+      - "         - blackhome"
+      - "           小黑屋"
+      - "         - list"
+      - "           玩家列表"
+      - "         - sponsor"
+      - "           赞助"
+      - "         - pvp"
+      - "           PVP信息"
+      - "         - skill"
+      - "           技能面板"
+      - "         - baltop"
+      - "           财富榜"
+  玩家列表:
+    trigger: "list"
+    groups:
+      - "00000000"
+    responses:
+      - "[command] list"
+  财富榜:
+    trigger: "baltop"
+    responses:
+      - "[command] baltop"
+  我的信息:
+    trigger: "info"
+    unbind_messages:
+      - "您还没有进入过服务器，无法使用该功能"
+    responses:
+      - "======【玩家信息】======"
+      - "ID：%player_name%"
+      - "金币：%vault_eco_balance%"
+      - "加入时间: %player_first_join_date%"
+      - "上次登录: %player_last_join_date%"
+      - "======【玩家信息】======"
+  加群欢迎:
+    trigger: "[join]"
+    groups:
+      - "000000"
+    responses:
+      - "[CQ:at,qq={qq}]欢迎加入我们的大家庭,新玩家请看公告"
+  在线人数:
+    trigger: "online"
+    responses:
+      - "[image] 在线人数"
+  玩家信息图片:
+    trigger: "info2"
+    unbind_messages:
+      - "您还没有进入过服务器，无法使用该功能"
+    groups:
+      - "772914992"
+      - "905157330"
+    responses:
+      - "[image] 玩家信息图片"
+custom_images:
+  在线人数:
+    source: "在线人数.png"
+    texts:
+      在线人数:
+        text: "%server_online%"
+        x: 290
+        z: 270
+        font: 站酷高端黑体
+        #字体大小
+        size: 120
+        #字体样式 0 =普通 #1=加粗 #2=斜体 #3=加粗斜体
+        style: 0
+  玩家信息图片:
+    source: "个人信息.png"
+    texts:
+      玩家名称:
+        text: "&#3380ff%player_name%"
+        x: 245
+        z: 280
+        font: 站酷高端黑体
+        #字体大小
+        size: 53
+        #字体样式 0 =普通 #1=加粗 #2=斜体 #3=加粗斜体
+        style: 0
+      玩家金币:
+        text: "&#F2994A%vault_eco_balance%&#7F8A9B枚"
+        x: 275
+        z: 390
+        font: 站酷高端黑体
+        #字体大小
+        size: 53
+        #字体样式 0 =普通 #1=加粗 #2=斜体 #3=加粗斜体
+        style: 0
+      在线状态:
+        text: "%offlinePapi_playerIsOnline%"
+        x: 276
+        z: 500
+        font: 旁门正道标题体
+        #字体大小
+        size: 55
+        #字体样式 0 =普通 #1=加粗 #2=斜体 #3=加粗斜体
+        style: 0

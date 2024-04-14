@@ -118,7 +118,8 @@ public class XinxinCustomMessage extends JavaPlugin {
                 List<String> responses = messages.getStringList(key + ".responses");
                 List<String> unbind_messages = messages.getStringList(key + ".unbind_messages");
                 List<Long> groups = messages.getLongList(key + ".groups");
-                CustomMessage customMessage = new CustomMessage(trigger, responses, unbind_messages, groups, key);
+                List<Long> admins = messages.getLongList(key + ".admins");
+                CustomMessage customMessage = new CustomMessage(trigger, responses, unbind_messages, groups, key,admins);
                 customMessageList.add(customMessage);
             }
         ConfigurationSection custom_images = config.getConfigurationSection("custom_images");

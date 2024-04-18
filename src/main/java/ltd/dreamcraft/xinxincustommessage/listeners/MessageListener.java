@@ -1,6 +1,7 @@
 package ltd.dreamcraft.xinxincustommessage.listeners;
 
 
+import com.xinxin.BotApi.BotAction;
 import com.xinxin.BotApi.BotBind;
 import com.xinxin.BotEvent.GroupMessageEvent;
 import com.xinxin.BotEvent.GroupUserChangesEvent;
@@ -68,13 +69,17 @@ public class MessageListener implements Listener {
 //                }
                 if (event.getMessage().equalsIgnoreCase(customMessage.trigger) || regex || (customMessage.trigger
                         .contains("{extra}") && event.getMessage().startsWith(customMessage.trigger.replace("{extra}", "")))) {
-                    String bindPlayerName = BotBind.getBindPlayerName(String.valueOf(event.getUser_id()));
-                    String extra = !regex ? event.getMessage().substring(customMessage.trigger.replace("{extra}", "").length() - 1).trim() : "";
-                    if (customMessage.unbind_messages.isEmpty() || bindPlayerName != null) {
-                        MessageUtil.sendMessage(customMessage.responses, event.getGroup_id(), event.getUser_id(), BotBind.getBindPlayerName(String.valueOf(event.getUser_id())), extra);
-                        continue;
+                    if (customMessage.admins.isEmpty() || customMessage.admins.contains(event.getUser_id())) {
+                        String bindPlayerName = BotBind.getBindPlayerName(String.valueOf(event.getUser_id()));
+                        String extra = !regex ? event.getMessage().substring(customMessage.trigger.replace("{extra}", "").length() - 1).trim() : "";
+                        if (customMessage.unbind_messages.isEmpty() || bindPlayerName != null) {
+                            MessageUtil.sendMessage(customMessage.responses, event.getGroup_id(), event.getUser_id(), BotBind.getBindPlayerName(String.valueOf(event.getUser_id())), extra);
+                            continue;
+                        }
+                        MessageUtil.sendMessage(customMessage.unbind_messages, event.getGroup_id(), event.getUser_id(), BotBind.getBindPlayerName(String.valueOf(event.getUser_id())), extra);
+                    } else {
+                        BotAction.sendGroupMessage(event.getGroup_id(), "你没有权限使用该指令", true);
                     }
-                    MessageUtil.sendMessage(customMessage.unbind_messages, event.getGroup_id(), event.getUser_id(), BotBind.getBindPlayerName(String.valueOf(event.getUser_id())), extra);
                 }
             }
         }

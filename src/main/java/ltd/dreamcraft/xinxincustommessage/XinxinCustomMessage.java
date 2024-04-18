@@ -179,6 +179,7 @@ public class XinxinCustomMessage extends JavaPlugin {
             if (args[0].equalsIgnoreCase("reload")) {
                 reloadConfig();
                 loadCustomMessages();
+                loadAllFonts();
                 sender.sendMessage("§a已经重新载入配置文件");
                 return true;
             }

@@ -103,7 +103,7 @@ public class MessageUtil {
         }
         List<String> response = getMsg(message, offlinePlayer, groupID, userID, nick, extra);
         if (!response.isEmpty())
-            BotAction.sendGroupMessage(Math.toIntExact(groupID), response, new boolean[0]);
+            BotAction.sendGroupMessage(Math.toIntExact(groupID), response, false);
     }
 
 }

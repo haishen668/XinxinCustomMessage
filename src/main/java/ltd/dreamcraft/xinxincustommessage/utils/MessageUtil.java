@@ -3,6 +3,7 @@ package ltd.dreamcraft.xinxincustommessage.utils;
 
 import com.xinxin.BotApi.BotAction;
 import com.xinxin.BotApi.BotBind;
+import ltd.dreamcraft.xinxincustommessage.Managers.DataManager;
 import ltd.dreamcraft.xinxincustommessage.XinxinCustomMessage;
 import ltd.dreamcraft.xinxincustommessage.objects.CustomImage;
 import me.clip.placeholderapi.PlaceholderAPI;
@@ -38,6 +39,7 @@ public class MessageUtil {
                 }
             }
             if (s.startsWith("[image]")) {
+                //图片类型信息
                 String imageID = s.replace("[image]", "").trim();
                 try {
                     CustomImage customImage = null;
@@ -54,6 +56,8 @@ public class MessageUtil {
                     //发送信息
 //                    System.out.println(bufferedImgToMsg(image));
 //                    return Collections.singletonList(bufferedImgToMsg(image));
+                    //TODO 计数图片信息数量
+                    DataManager.invokeCountsMap.put("images", DataManager.invokeCountsMap.get("images") + 1);
                     response.add(bufferedImgToMsg(image));
                 } catch (Exception e) {
                     if (XinxinCustomMessage.getInstance().getConfig().getBoolean("debug"))
@@ -62,6 +66,7 @@ public class MessageUtil {
                 continue;
             }
             if (s.startsWith("[command]")) {
+                //命令执行类型
                 String cmd = s.replace("[command]", "").trim();
                 CommandSender commandSender = OnCommand.getSender(groupID, true);
                 Bukkit.getScheduler().runTask(XinxinCustomMessage.getInstance(), () -> Bukkit.dispatchCommand(commandSender, cmd));
@@ -69,6 +74,8 @@ public class MessageUtil {
             }
             response.add(s);
         }
+        //TODO 计数消息模板发送次数
+        DataManager.invokeCountsMap.put("total", DataManager.invokeCountsMap.get("total") + 1);
         return response;
     }
 

@@ -1,10 +1,10 @@
 debug: false
-#是否开启图片识别
+#是否开启图片识别(功能暂未启用)
 ocr-scan: true
 messagefolders:
   - messages
 custom_messages:
-  help:
+  帮助:
     trigger: "help"
     #有则未绑定用户的玩家发送此消息,无则忽略是否绑定
     #你可以将这个配置项注释掉,以取消这个功能
@@ -61,15 +61,32 @@ custom_messages:
     trigger: "online"
     responses:
       - "[image] 在线人数"
+  踢人:
+    trigger: "kick {extra}"
+    admins:
+      - "2821396723"
+    responses:
+      - "[command] kick {extra}"
+  执行命令:
+    trigger: "执行 {extra}"
+    admins:
+      - "2821396723"
+    responses:
+      - "[command] {extra}"
   玩家信息图片:
-    trigger: "info2"
+    trigger: "我的信息"
     unbind_messages:
       - "您还没有进入过服务器，无法使用该功能"
-    groups:
-      - "772914992"
-      - "905157330"
     responses:
       - "[image] 玩家信息图片"
+  统计:
+    trigger: "count"
+    groups:
+      - "00000000"
+    responses:
+      - "模板总调用次数：%bot_invokeCounts_total%"
+      - "图片模板调用次数：%bot_invokeCounts_images%"
+      - "普通模板调用次数：%bot_invokeCounts_texts%"
 custom_images:
   在线人数:
     source: "在线人数.png"
@@ -105,7 +122,7 @@ custom_images:
         #字体样式 0 =普通 #1=加粗 #2=斜体 #3=加粗斜体
         style: 0
       在线状态:
-        text: "%offlinePapi_playerIsOnline%"
+        text: "%bot_playerIsOnline%"
         x: 276
         z: 500
         font: 旁门正道标题体

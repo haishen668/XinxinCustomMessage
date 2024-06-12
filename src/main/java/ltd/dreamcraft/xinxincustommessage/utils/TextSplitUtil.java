@@ -11,6 +11,7 @@ import java.util.regex.Pattern;
 
 public class TextSplitUtil {
     public static ArrayList<String> TextSpit(String Text) {
+        Text = Text.replace("§", "&");
         ArrayList<String> SubText = new ArrayList<>();
         //String regex = "&#[0-9A-Fa-f]{6}[^&]*";
         String regex = "(&#[0-9A-Fa-f]{6}|&[0-9A-Fa-f])[^&]*";

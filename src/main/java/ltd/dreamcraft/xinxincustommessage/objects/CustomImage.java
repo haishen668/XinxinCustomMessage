@@ -1,6 +1,7 @@
 package ltd.dreamcraft.xinxincustommessage.objects;
 
 
+import com.xinxin.BotApi.BotBind;
 import ltd.dreamcraft.www.pokemonbag.Utils.ParsePokemon;
 import ltd.dreamcraft.xinxincustommessage.XinxinCustomMessage;
 import ltd.dreamcraft.xinxincustommessage.utils.TextSplitUtil;
@@ -10,7 +11,6 @@ import org.bukkit.OfflinePlayer;
 import javax.imageio.ImageIO;
 import java.awt.*;
 import java.awt.image.BufferedImage;
-import java.awt.image.ImageObserver;
 import java.io.File;
 import java.io.IOException;
 import java.io.InputStream;
@@ -68,14 +68,24 @@ public class CustomImage {
         Graphics2D g = outputImage.createGraphics();
         outputImage = g.getDeviceConfiguration().createCompatibleImage(targetWidth, targetHeight, 3);
         g = outputImage.createGraphics();
-        g.drawImage(resultingImage, 0, 0, (ImageObserver) null);
+        g.drawImage(resultingImage, 0, 0, null);
         return outputImage;
     }
 
     public BufferedImage renderImage(OfflinePlayer player) throws Exception {
         BufferedImage srcImg;
+        //----------------1.0.4bug修复--------------------
         //this.source是底图的位置
-        String path = PlaceholderAPI.setPlaceholders(player, this.source);
+        String path;
+        if (player == null) {
+            path = this.source;
+        } else {
+            path = PlaceholderAPI.setPlaceholders(player, this.source);
+        }
+        if (player != null) {
+            path = path.replace("{qq}", BotBind.getBindQQ(player.getName()).toLowerCase());
+        }
+        //----------------1.0.4bug修复--------------------
         if (path.startsWith("[url]")) {
             //如果以[url]开头就下载这个链接地址的图片
             srcImg = downloadImage(path.substring(5));
@@ -91,16 +101,21 @@ public class CustomImage {
         //渲染图片底图
         g2d.drawImage(srcImg, 0, 0, srcImg.getWidth(), srcImg.getHeight(), null);
         for (SubImage subImage : this.subImages) {
-            BufferedImage image;
+            BufferedImage image = null;
             String subImgPath = subImage.path;
             subImgPath = PlaceholderAPI.setPlaceholders(player, subImgPath);
             //如果子图片的path以[url]开头，那么就读取网链，如果不是就读取本地的图片
             if (subImgPath.startsWith("[url]")) {
+                if (player != null) {
+                    subImgPath = subImgPath.replace("{qq}", BotBind.getBindQQ(player.getName()).toLowerCase());
+                }
                 image = downloadImage(subImgPath.substring(5));
             } else if (subImgPath.startsWith("[pokemon]")) {
                 //在pokemonbag插件中写一个方法，返回一个image对象
                 String imageFolder = "plugins/XinxinCustomMessage/images/pokemonImg";
-                image = ParsePokemon.pokemonToImg(imageFolder, subImgPath, player);
+                if (player != null) {
+                    image = ParsePokemon.pokemonToImg(imageFolder, subImgPath, player);
+                }
                 if (image == null) {
                     continue;
                 }
@@ -116,13 +131,17 @@ public class CustomImage {
             if (image != null) {
                 if (Math.min(w, h) > 0)
                     image = resizeImage(image, w, h);
-                g2d.drawImage(image, x, z, (ImageObserver) null);
+                g2d.drawImage(image, x, z, null);
             }
         }
         for (CustomText customText : this.customTexts) {
             String text = customText.text;
             try {
                 text = PlaceholderAPI.setPlaceholders(player, text);
+                if (player != null) {
+                    text = text.replace("{qq}", BotBind.getBindQQ(player.getName()));
+                }
+//                text = MathUtil.calculateByText(text); 产生了一个bug
             } catch (IllegalStateException e) {
                 if (XinxinCustomMessage.getInstance().getConfig().getBoolean("debug")) {
                     e.printStackTrace();
@@ -131,7 +150,9 @@ public class CustomImage {
                 }
             }
             if (text.contains("[pokemon]")) {
-                text = ParsePokemon.pokemonToString(text, player);
+                if (player != null) {
+                    text = ParsePokemon.pokemonToString(text, player);
+                }
                 if (text == null) {
                     continue;
                 }

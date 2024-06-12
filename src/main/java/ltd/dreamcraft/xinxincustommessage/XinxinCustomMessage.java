@@ -1,15 +1,16 @@
 package ltd.dreamcraft.xinxincustommessage;
 
 
-import com.xinxin.BotApi.BotAction;
+import ltd.dreamcraft.xinxincustommessage.CustomMessageHook.CustomHook;
+import ltd.dreamcraft.xinxincustommessage.Managers.DataManager;
+import ltd.dreamcraft.xinxincustommessage.api.CustomMessageAPI;
 import ltd.dreamcraft.xinxincustommessage.listeners.MessageListener;
 import ltd.dreamcraft.xinxincustommessage.objects.CustomImage;
 import ltd.dreamcraft.xinxincustommessage.objects.CustomMessage;
 import ltd.dreamcraft.xinxincustommessage.objects.CustomText;
 import ltd.dreamcraft.xinxincustommessage.objects.SubImage;
-import ltd.dreamcraft.xinxincustommessage.utils.MessageUtil;
+import ltd.dreamcraft.xinxincustommessage.utils.Metrics;
 import org.bukkit.Bukkit;
-import org.bukkit.OfflinePlayer;
 import org.bukkit.command.Command;
 import org.bukkit.command.CommandSender;
 import org.bukkit.configuration.Configuration;
@@ -119,7 +120,7 @@ public class XinxinCustomMessage extends JavaPlugin {
                 List<String> unbind_messages = messages.getStringList(key + ".unbind_messages");
                 List<Long> groups = messages.getLongList(key + ".groups");
                 List<Long> admins = messages.getLongList(key + ".admins");
-                CustomMessage customMessage = new CustomMessage(trigger, responses, unbind_messages, groups, key,admins);
+                CustomMessage customMessage = new CustomMessage(trigger, responses, unbind_messages, groups, key, admins);
                 customMessageList.add(customMessage);
             }
         ConfigurationSection custom_images = config.getConfigurationSection("custom_images");
@@ -164,22 +165,42 @@ public class XinxinCustomMessage extends JavaPlugin {
     public void onEnable() {
         instance = this;
         saveDefaultConfig();
-        saveResource("images/个人信息.png", false);
-        saveResource("images/在线人数.png", false);
-        saveResource("images/精灵背包.png", false);
+        //hook注册
+        new CustomHook().register();
+        File file = new File(getDataFolder(), "images/个人信息.png");
+        if (!file.exists()) {
+            saveResource("images/个人信息.png", false);
+        }
+        file = new File(getDataFolder(), "images/在线人数.png");
+        if (!file.exists()) {
+            saveResource("images/在线人数.png", false);
+        }
+        file = new File(getDataFolder(), "images/精灵背包.png");
+        if (!file.exists()) {
+            saveResource("images/精灵背包.png", false);
+        }
+        new DataManager();
         getServer().getPluginManager().registerEvents((Listener) new MessageListener(), (Plugin) this);
         loadAllFonts();
         loadCustomMessages();
         getLogger().info("Loaded");
+        Metrics metrics = new Metrics(this, 21808);
     }
 
+    public void onDisable() {
+        DataManager.saveCounts();
+    }
 
     public boolean onCommand(@NotNull CommandSender sender, @NotNull Command command, @NotNull String label, @NotNull String[] args) {
         if (args.length == 1 && sender.hasPermission("xinxincustommessages.admin")) {
             if (args[0].equalsIgnoreCase("reload")) {
+                DataManager.saveCounts();
+                customFontList.clear();
                 reloadConfig();
-                loadCustomMessages();
                 loadAllFonts();
+                loadCustomMessages();
+                //加载 DataManager.invokeCountsMap 数据
+                new DataManager();
                 sender.sendMessage("§a已经重新载入配置文件");
                 return true;
             }
@@ -216,32 +237,44 @@ public class XinxinCustomMessage extends JavaPlugin {
             }
         }
         if (args.length == 4 && sender.hasPermission("xinxincustommessages.send") && args[0].equalsIgnoreCase("send")) {
-            Bukkit.getScheduler().runTaskAsynchronously((Plugin) this, () -> {
-                long id;
-                CustomMessage message = null;
-                for (CustomMessage customMessage : customMessageList) {
-                    if (customMessage.getId().equalsIgnoreCase(args[3])) {
-                        message = customMessage;
-                        break;
-                    }
+            Bukkit.getScheduler().runTaskAsynchronously(this, () -> {
+                if (CustomMessageAPI.sendCustomMessage(Long.parseLong(args[1]), args[2], args[3], "")) {
+                    sender.sendMessage("§a发送成功!");
+                } else {
+                    sender.sendMessage("§c消息id不存在或者群号不是数字");
                 }
-                if (message == null) {
-                    sender.sendMessage("§c消息ID: §b" + args[3] + " §c不存在!");
-                    return;
+//                long id;
+//                CustomMessage message = null;
+//                for (CustomMessage customMessage : customMessageList) {
+//                    if (customMessage.getId().equalsIgnoreCase(args[3])) {
+//                        message = customMessage;
+//                        break;
+//                    }
+//                }
+//                if (message == null) {
+//                    sender.sendMessage("§c消息ID: §b" + args[3] + " §c不存在!");
+//                    return;
+//                }
+//                OfflinePlayer player = Bukkit.getOfflinePlayer(args[2]);
+//                try {
+//                    id = Long.parseLong(args[1]);
+//                } catch (Exception ignored) {
+//                    sender.sendMessage("§a群号必须为数字!");
+//                    return;
+//                }
+//                List<String> response = MessageUtil.getMsg(message.getResponses(), player, Math.toIntExact(id), Math.toIntExact(Long.valueOf(0L)), "", "");
+//                if (!response.isEmpty())
+//                    BotAction.sendGroupMessage((int) id,response, true);
+            });
+            return true;
+        }
+        if (args.length == 5 && sender.hasPermission("xinxincustommessages.send") && args[0].equalsIgnoreCase("send")) {
+            Bukkit.getScheduler().runTaskAsynchronously(this, () -> {
+                if (CustomMessageAPI.sendCustomMessage(Long.parseLong(args[1]), args[2], args[3], args[4])) {
+                    sender.sendMessage("§a发送成功!");
+                } else {
+                    sender.sendMessage("§c消息id不存在或者群号不是数字");
                 }
-                OfflinePlayer player = Bukkit.getOfflinePlayer(args[2]);
-                try {
-                    id = Long.parseLong(args[1]);
-                } catch (Exception ignored) {
-                    sender.sendMessage("§a群号必须为数字!");
-                    return;
-                }
-//                Group group = Bot.getApi().getGroupInfo(id, false);
-
-                List<String> response = MessageUtil.getMsg(message.getResponses(), player, Math.toIntExact(id), Math.toIntExact(Long.valueOf(0L)), "", "");
-                if (!response.isEmpty())
-                    BotAction.sendGroupMessage((int) id,response, new boolean[0]);
-                sender.sendMessage("§a发送成功!");
             });
             return true;
         }
@@ -250,7 +283,7 @@ public class XinxinCustomMessage extends JavaPlugin {
         sender.sendMessage("§a/xxcm log - 开启或关闭输出消息的mirai码");
         sender.sendMessage("§a/xxcm listmessages - 列出已经加载的自定义消息模版");
         sender.sendMessage("§a/xxcm listimages - 列出已经加载的自定义图片模版");
-        sender.sendMessage("§a/xxcm send <群号> <玩家> <消息ID> - 向群内发送信息");
+        sender.sendMessage("§a/xxcm send <群号> <玩家> <消息ID> [可选extra]- 向群内发送信息");
         return true;
     }
 }

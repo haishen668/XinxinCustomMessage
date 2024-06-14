@@ -19,7 +19,7 @@ public class MessageListener implements Listener {
     public void onGroupMemberIncrease(GroupUserChangesEvent event) {
         for (CustomMessage customMessage : XinxinCustomMessage.customMessageList) {
             if ((customMessage.groups.isEmpty() || customMessage.groups.contains(event.getGroup_id())) &&
-                    customMessage.trigger.equalsIgnoreCase("[join]")
+                    "[join]".equalsIgnoreCase(customMessage.trigger)
                     && event.isIncrease()) {
                 if (customMessage.unbind_messages.isEmpty()) {
                     MessageUtil.sendMessage(customMessage.responses, event.getGroup_id(), event.getUser_id(), "", "");
@@ -29,9 +29,8 @@ public class MessageListener implements Listener {
             }
 
 
-
             if ((customMessage.groups.isEmpty() || customMessage.groups.contains(event.getGroup_id())) &&
-                    customMessage.trigger.equalsIgnoreCase("[leave]")
+                    "[leave]".equalsIgnoreCase(customMessage.trigger)
                     && !event.isIncrease()) {
                 String bindPlayerName = BotBind.getBindPlayerName(String.valueOf(event.getUser_id()));
                 if (customMessage.unbind_messages.isEmpty() || bindPlayerName != null) {

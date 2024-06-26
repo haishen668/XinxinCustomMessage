@@ -12,13 +12,15 @@ public class CustomText {
     public final int x;
 
     public final int z;
+    public final boolean center;
 
-    public CustomText(String id, String text, Font font, int x, int z) {
+    public CustomText(String id, String text, Font font, int x, int z, boolean center) {
         this.id = id;
         this.text = text;
         this.font = font;
         this.x = x;
         this.z = z;
+        this.center = center;
     }
 }
 

@@ -74,7 +74,8 @@ public class XinxinCustomMessage extends JavaPlugin {
                 int h = subImages.getInt(subImageID + ".height");
                 int x = subImages.getInt(subImageID + ".x");
                 int z = subImages.getInt(subImageID + ".z");
-                SubImage subImage = new SubImage(subImageID, path, w, h, x, z);
+                boolean center = subImages.getBoolean(subImageID + ".center", false);
+                SubImage subImage = new SubImage(subImageID, path, w, h, x, z, center);
                 subImageList.add(subImage);
             }
         return subImageList;
@@ -105,7 +106,8 @@ public class XinxinCustomMessage extends JavaPlugin {
 //                for (String s : colorString.split("\\|"))
 //                    colors.add(Integer.valueOf(Integer.parseInt(s)));
 //                Color color = new Color(((Integer) colors.get(0)).intValue(), ((Integer) colors.get(1)).intValue(), ((Integer) colors.get(2)).intValue());
-                CustomText customText = new CustomText(textID, text, font, x, z);
+                boolean center = customTexts.getBoolean(textID + ".center", false);
+                CustomText customText = new CustomText(textID, text, font, x, z, center);
                 customTextList.add(customText);
             }
         return customTextList;

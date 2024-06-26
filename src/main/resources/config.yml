@@ -95,6 +95,7 @@ custom_images:
         text: "%server_online%"
         x: 290
         z: 270
+        center: false
         font: 站酷高端黑体
         #字体大小
         size: 120
@@ -107,6 +108,7 @@ custom_images:
         text: "&#3380ff%player_name%"
         x: 245
         z: 280
+        center: false
         font: 站酷高端黑体
         #字体大小
         size: 53

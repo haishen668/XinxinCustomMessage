@@ -47,6 +47,7 @@ public class MessageListener implements Listener {
     public void onMsg(GroupMessageEvent event) {
         if (XinxinCustomMessage.LOG)
             XinxinCustomMessage.getInstance().getLogger().info("§a群[" + event.getGroup_id() + "]: §b" + event.getMessage());
+
         for (CustomMessage customMessage : XinxinCustomMessage.customMessageList) {
             if (customMessage.groups.isEmpty() || customMessage.groups.contains(event.getGroup_id())) {
                 boolean regex = false;
@@ -56,25 +57,42 @@ public class MessageListener implements Listener {
                     if (matcher.find())
                         regex = true;
                 }
-                //新增一个图片识别
-//                if (customMessage.trigger.startsWith("[image]") && XinxinCustomMessage.getInstance().getConfig().getBoolean("ocr-scan")){
-//                    String message = customMessage.trigger.replace("[image]", "").trim();
-//                    String eventImgOCR = event.getImgOCR();
-//                    if (eventImgOCR.contains(message) || eventImgOCR.replace(" ","").toLowerCase().contains(message.toLowerCase())){
-//                        MessageUtil.sendMessage(customMessage.responses, event.getGroup_id(), event.getUser_id(), event.getSender().getName(),"");
-//                        continue;
-//                    }
-//                }
-                if (event.getMessage().equalsIgnoreCase(customMessage.trigger) || regex || (customMessage.trigger
-                        .contains("{extra}") && event.getMessage().startsWith(customMessage.trigger.replace("{extra}", "")))) {
+                // 新增一个图片识别
+                // if (customMessage.trigger.startsWith("[image]") && XinxinCustomMessage.getInstance().getConfig().getBoolean("ocr-scan")){
+                //     String message = customMessage.trigger.replace("[image]", "").trim();
+                //     String eventImgOCR = event.getImgOCR();
+                //     if (eventImgOCR.contains(message) || eventImgOCR.replace(" ","").toLowerCase().contains(message.toLowerCase())){
+                //         MessageUtil.sendMessage(customMessage.responses, event.getGroup_id(), event.getUser_id(), event.getSender().getName(),"");
+                //         continue;
+                //     }
+                // }
+
+                if (event.getMessage().equalsIgnoreCase(customMessage.trigger) || regex || customMessage.trigger.contains("{extra}")) {
+                    String message = event.getMessage();
+                    String trigger = customMessage.trigger;
+                    String[] triggerArg = trigger.split("\\{extra}");
+                    boolean allSubMessagesMatched = true;
+
+                    for (String subMessage : triggerArg) {
+                        if (!message.contains(subMessage)) {
+                            allSubMessagesMatched = false;
+                            break;
+                        }
+                        message = message.replace(subMessage, "");
+                    }
+
+                    if (!allSubMessagesMatched) {
+                        continue; // 跳过当前的customMessage，进行下一次外层循环
+                    }
+
                     if (customMessage.admins.isEmpty() || customMessage.admins.contains(event.getUser_id())) {
                         String bindPlayerName = BotBind.getBindPlayerName(String.valueOf(event.getUser_id()));
-                        String extra = !regex ? event.getMessage().substring(customMessage.trigger.replace("{extra}", "").length() - 1).trim() : "";
+                        String extra = !regex ? message : "";
                         if (customMessage.unbind_messages.isEmpty() || bindPlayerName != null) {
-                            MessageUtil.sendMessage(customMessage.responses, event.getGroup_id(), event.getUser_id(), BotBind.getBindPlayerName(String.valueOf(event.getUser_id())), extra);
+                            MessageUtil.sendMessage(customMessage.responses, event.getGroup_id(), event.getUser_id(), bindPlayerName, extra);
                             continue;
                         }
-                        MessageUtil.sendMessage(customMessage.unbind_messages, event.getGroup_id(), event.getUser_id(), BotBind.getBindPlayerName(String.valueOf(event.getUser_id())), extra);
+                        MessageUtil.sendMessage(customMessage.unbind_messages, event.getGroup_id(), event.getUser_id(), bindPlayerName, extra);
                     } else {
                         BotAction.sendGroupMessage(event.getGroup_id(), "你没有权限使用该指令", true);
                     }
@@ -82,4 +100,5 @@ public class MessageListener implements Listener {
             }
         }
     }
+
 }

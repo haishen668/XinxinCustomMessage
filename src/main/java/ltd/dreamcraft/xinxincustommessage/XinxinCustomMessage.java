@@ -139,7 +139,7 @@ public class XinxinCustomMessage extends JavaPlugin {
     public static void loadCustomMessages() {
         customMessageList.clear();
         customImageList.clear();
-        loadCustomMessage((Configuration) getInstance().getConfig());
+        loadCustomMessage(getInstance().getConfig());
         List<String> folders = getInstance().getConfig().getStringList("messagefolders");
         for (String name : folders) {
             File folder = new File(instance.getDataFolder(), name);

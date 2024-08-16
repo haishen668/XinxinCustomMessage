@@ -30,8 +30,8 @@ import java.util.Set;
 public class ConsoleSender implements ConsoleCommandSender {
     private final long contactID;
     private final boolean isGroup;
-    private final ArrayList<String> output = new ArrayList();
-    private final ArrayList<String> tempOutPut = new ArrayList();
+    private final ArrayList<String> output = new ArrayList<>();
+    private final ArrayList<String> tempOutPut = new ArrayList<>();
     private final ConsoleSender instance;
     private BukkitTask task = null;
 
@@ -80,9 +80,9 @@ public class ConsoleSender implements ConsoleCommandSender {
                 String msg = response.toString().trim();
                 if (!msg.isEmpty()) {
                     if (this.isGroup) {
-                        BotAction.sendGroupMessage(this.contactID, msg, new boolean[]{true});
+                        BotAction.sendGroupMessage(this.contactID, msg, true);
                     } else {
-                        BotAction.sendPrivateMessage(this.contactID, msg, new boolean[]{true});
+                        BotAction.sendPrivateMessage(this.contactID, msg, true);
                     }
 
                     this.output.clear();

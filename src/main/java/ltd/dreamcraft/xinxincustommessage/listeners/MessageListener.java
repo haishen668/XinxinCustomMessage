@@ -48,10 +48,10 @@ public class MessageListener implements Listener {
         if (XinxinCustomMessage.LOG)
             XinxinCustomMessage.getInstance().getLogger().info("§a群[" + event.getGroup_id() + "]: §b" + event.getMessage());
 
-        for (CustomMessage customMessage : XinxinCustomMessage.customMessageList) {
-            if (customMessage.groups.isEmpty() || customMessage.groups.contains(event.getGroup_id())) {
-                boolean regex = false;
-                if (customMessage.trigger.startsWith("[regex]")) {
+        for (CustomMessage customMessage : XinxinCustomMessage.customMessageList) {//遍历所有信息
+            if (customMessage.groups.isEmpty() || customMessage.groups.contains(event.getGroup_id())) {//是否在监听列表当中
+                boolean regex = false;  //标记：是否是正则表达式
+                if (customMessage.trigger.startsWith("[regex]")) { //是否以正则表达式 开头
                     String pattern = customMessage.trigger.replace("[regex]", "").trim();
                     Matcher matcher = Pattern.compile(pattern).matcher(event.getMessage());
                     if (matcher.find())
@@ -65,29 +65,33 @@ public class MessageListener implements Listener {
                 //         MessageUtil.sendMessage(customMessage.responses, event.getGroup_id(), event.getUser_id(), event.getSender().getName(),"");
                 //         continue;
                 //     }
-                // }
-
+                //
                 if (event.getMessage().equalsIgnoreCase(customMessage.trigger) || regex || customMessage.trigger.contains("{extra}")) {
+                    //信息和关键词完全匹配 || 符合正则表达式 || (是否包含{extra} => 关键词中包含触发器)
                     String message = event.getMessage();
                     String trigger = customMessage.trigger;
-                    String[] triggerArg = trigger.split("\\{extra}");
-                    boolean allSubMessagesMatched = true;
 
-                    for (String subMessage : triggerArg) {
-                        if (!message.contains(subMessage)) {
-                            allSubMessagesMatched = false;
-                            break;
+                    if (trigger.contains("{extra}")) {  //
+                        //信息要包含除了{extra}的每个子字符串 不然就返回
+                        String[] triggerArg = trigger.split("\\{extra}");
+                        boolean allSubMessagesMatched = true;
+
+                        for (String subMessage : triggerArg) {
+                            if (!message.contains(subMessage)) {
+                                allSubMessagesMatched = false;
+                                break;
+                            }
+                            message = message.replace(subMessage, "");
                         }
-                        message = message.replace(subMessage, "");
-                    }
 
-                    if (!allSubMessagesMatched) {
-                        continue; // 跳过当前的customMessage，进行下一次外层循环
+                        if (!allSubMessagesMatched) {
+                            continue; // 跳过当前的customMessage，进行下一次外层循环
+                        }
                     }
 
                     if (customMessage.admins.isEmpty() || customMessage.admins.contains(event.getUser_id())) {
                         String bindPlayerName = BotBind.getBindPlayerName(String.valueOf(event.getUser_id()));
-                        String extra = !regex ? message : "";
+                        String extra = !regex ? message : ""; //正则没匹配到就返回 message
                         if (customMessage.unbind_messages.isEmpty() || bindPlayerName != null) {
                             MessageUtil.sendMessage(customMessage.responses, event.getGroup_id(), event.getUser_id(), bindPlayerName, extra);
                             continue;

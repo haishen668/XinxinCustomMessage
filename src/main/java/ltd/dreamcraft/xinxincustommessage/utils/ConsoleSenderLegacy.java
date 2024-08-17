@@ -51,7 +51,7 @@ public class ConsoleSenderLegacy implements ConsoleCommandSender {
     }
 
     @NotNull
-    public CommandSender.@NotNull Spigot spigot() {
+    public CommandSender.Spigot spigot() {
         return null;
     }
 

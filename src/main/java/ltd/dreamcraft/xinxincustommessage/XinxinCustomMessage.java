@@ -21,6 +21,8 @@ import org.bukkit.plugin.Plugin;
 import org.bukkit.plugin.java.JavaPlugin;
 import org.jetbrains.annotations.NotNull;
 
+import javax.script.ScriptEngine;
+import javax.script.ScriptEngineManager;
 import java.awt.*;
 import java.io.File;
 import java.io.IOException;
@@ -36,7 +38,7 @@ public class XinxinCustomMessage extends JavaPlugin {
     public static Set<CustomImage> customImageList = ConcurrentHashMap.newKeySet();
     public static Map<String, Font> customFontList = new HashMap<>();
     public static boolean LOG = false;
-
+    private static ScriptEngine scriptEngine;
     public static XinxinCustomMessage getInstance() {
         return instance;
     }
@@ -115,25 +117,28 @@ public class XinxinCustomMessage extends JavaPlugin {
 
     public static void loadCustomMessage(Configuration config) {
         ConfigurationSection messages = config.getConfigurationSection("custom_messages");
-        if (messages != null)
+        if (messages != null) {
             for (String key : messages.getKeys(false)) {
                 String trigger = messages.getString(key + ".trigger");
-                List<String> responses = messages.getStringList(key + ".responses");
-                List<String> unbind_messages = messages.getStringList(key + ".unbind_messages");
-                List<Long> groups = messages.getLongList(key + ".groups");
-                List<Long> admins = messages.getLongList(key + ".admins");
-                CustomMessage customMessage = new CustomMessage(trigger, responses, unbind_messages, groups, key, admins);
+                List<String> responses = messages.contains(key + ".responses") ? messages.getStringList(key + ".responses") : Collections.emptyList();
+                List<String> unbindMessages = messages.contains(key + ".unbind_messages") ? messages.getStringList(key + ".unbind_messages") : Collections.emptyList();
+                List<Long> groups = messages.contains(key + ".groups") ? messages.getLongList(key + ".groups") : Collections.emptyList();
+                List<Long> admins = messages.contains(key + ".admins") ? messages.getLongList(key + ".admins") : Collections.emptyList();
+                List<String> scripts = messages.contains(key + ".scripts") ? messages.getStringList(key + ".scripts") : Collections.emptyList();
+                CustomMessage customMessage = new CustomMessage(trigger, responses, unbindMessages, groups, key, admins, scripts);
                 customMessageList.add(customMessage);
             }
-        ConfigurationSection custom_images = config.getConfigurationSection("custom_images");
-        if (custom_images != null)
-            for (String key : custom_images.getKeys(false)) {
+        }
+        ConfigurationSection customImages = config.getConfigurationSection("custom_images");
+        if (customImages != null) {
+            for (String key : customImages.getKeys(false)) {
                 String source = config.getString("custom_images." + key + ".source");
                 int width = config.getInt("custom_images." + key + ".width");
                 int height = config.getInt("custom_images." + key + ".height");
                 CustomImage customImage = new CustomImage(key, source, width, height, loadSubImage(config, key), loadCustomTexts(config, key));
                 customImageList.add(customImage);
             }
+        }
     }
 
     public static void loadCustomMessages() {
@@ -187,6 +192,10 @@ public class XinxinCustomMessage extends JavaPlugin {
         loadCustomMessages();
         getLogger().info("Loaded");
         Metrics metrics = new Metrics(this, 21808);
+        // 初始化JS引擎
+        ScriptEngineManager scriptEngineManager = new ScriptEngineManager();
+        scriptEngine = scriptEngineManager.getEngineByName("JavaScript");
+
     }
 
     public void onDisable() {
@@ -287,6 +296,14 @@ public class XinxinCustomMessage extends JavaPlugin {
         sender.sendMessage("§a/xxcm listimages - 列出已经加载的自定义图片模版");
         sender.sendMessage("§a/xxcm send <群号> <玩家> <消息ID> [可选extra]- 向群内发送信息");
         return true;
+    }
+
+    public static ScriptEngine getScriptEngine() {
+        return scriptEngine;
+    }
+
+    public static void setScriptEngine(ScriptEngine scriptEngine) {
+        XinxinCustomMessage.scriptEngine = scriptEngine;
     }
 }
 

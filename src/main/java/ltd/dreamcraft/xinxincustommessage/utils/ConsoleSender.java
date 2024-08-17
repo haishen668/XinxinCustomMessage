@@ -136,7 +136,7 @@ public class ConsoleSender implements ConsoleCommandSender {
     }
 
     @NotNull
-    public CommandSender.@NotNull Spigot spigot() {
+    public CommandSender. Spigot spigot() {
         return new CommandSender.Spigot() {
             public void sendMessage(BaseComponent component) {
                 ConsoleSender.this.instance.sendMessage(component.toPlainText());

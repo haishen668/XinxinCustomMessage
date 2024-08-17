@@ -10,14 +10,19 @@ import org.bukkit.OfflinePlayer;
 import javax.imageio.ImageIO;
 import java.awt.*;
 import java.awt.image.BufferedImage;
-import java.io.File;
-import java.io.IOException;
-import java.io.InputStream;
+import java.io.*;
+import java.net.HttpURLConnection;
+import java.net.MalformedURLException;
 import java.net.URL;
 import java.net.URLConnection;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Objects;
+import java.util.stream.Collectors;
 
+/**
+ * @author haishen668
+ */
 public class CustomImage {
     // 图片的唯一标识符
     public final String id;
@@ -54,7 +59,7 @@ public class CustomImage {
             connection.setConnectTimeout(20000);
             connection.setUseCaches(false);
             connection.setDefaultUseCaches(false);
-            connection.addRequestProperty("User-Agent", "Mozilla/5.0");
+            connection.addRequestProperty("User-Agent", "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/127.0.0.0 Safari/537.36 Edg/127.0.0.0");
             connection.addRequestProperty("Cache-Control", "no-cache, no-store, must-revalidate");
             connection.addRequestProperty("Pragma", "no-cache");
             InputStream in = connection.getInputStream();
@@ -233,5 +238,18 @@ public class CustomImage {
             }
         }
         return srcImg;
+    }
+
+    @Override
+    public boolean equals(Object o) {
+        if (this == o) return true;
+        if (o == null || getClass() != o.getClass()) return false;
+        CustomImage that = (CustomImage) o;
+        return Objects.equals(id, that.id);
+    }
+
+    @Override
+    public int hashCode() {
+        return Objects.hash(id);
     }
 }

@@ -1,11 +1,30 @@
 package ltd.dreamcraft.xinxincustommessage.CustomMessageHook;
 
+import com.google.gson.Gson;
+import com.google.gson.JsonElement;
+import com.google.gson.JsonObject;
+import com.mojang.authlib.GameProfile;
+import com.mojang.authlib.properties.Property;
 import ltd.dreamcraft.xinxincustommessage.Managers.DataManager;
 import ltd.dreamcraft.xinxincustommessage.XinxinCustomMessage;
+import me.albert.skullapi.SkullAPI;
 import me.clip.placeholderapi.expansion.PlaceholderExpansion;
+import org.bukkit.Bukkit;
 import org.bukkit.OfflinePlayer;
+import org.bukkit.inventory.ItemStack;
+import org.bukkit.inventory.meta.ItemMeta;
+import org.bukkit.inventory.meta.SkullMeta;
 import org.jetbrains.annotations.NotNull;
+import org.jetbrains.annotations.Nullable;
 
+import javax.annotation.Nonnull;
+import java.io.BufferedReader;
+import java.io.InputStreamReader;
+import java.lang.reflect.Field;
+import java.net.HttpURLConnection;
+import java.net.URL;
+import java.util.Base64;
+import java.util.Objects;
 import java.util.UUID;
 
 /**
@@ -38,10 +57,13 @@ public class CustomHook extends PlaceholderExpansion {
         if ("playerIsOnline".equalsIgnoreCase(identifier)) {
             return player.isOnline() ? "&#26E78B在线" : "&#FF647E离线";
         }
-        //玩家离线uuid
+        // Mojang API 获取玩家 UUID
         if ("playeruuid".equalsIgnoreCase(identifier)) {
-            UUID uniqueId = player.getUniqueId();
-            return uniqueId.toString();
+            try {
+                return getUUID(player.getName());
+            } catch (Exception e) {
+                return "";
+            }
         }
         //图片模板调用次数
         if ("invokeCounts_images".equalsIgnoreCase(identifier)) {
@@ -62,6 +84,45 @@ public class CustomHook extends PlaceholderExpansion {
 
         return "";
     }
+
+    public static String getUUID(String username) throws Exception {
+        // API URL
+        String url = "https://api.ashcon.app/mojang/v2/user/" + username;
+
+        // 创建一个URL对象
+        URL obj = new URL(url);
+        HttpURLConnection con = (HttpURLConnection) obj.openConnection();
+
+        // 设置请求类型为GET
+        con.setRequestMethod("GET");
+
+        // 获取响应码
+        int responseCode = con.getResponseCode();
+        if (responseCode == HttpURLConnection.HTTP_OK) { // success
+            // 读取响应内容
+            BufferedReader in = new BufferedReader(new InputStreamReader(con.getInputStream()));
+            String inputLine;
+            StringBuilder response = new StringBuilder();
+
+            while ((inputLine = in.readLine()) != null) {
+                response.append(inputLine);
+            }
+            in.close();
+
+            // 使用 Gson 解析 JSON 响应
+            Gson gson = new Gson();
+            JsonObject jsonObject = gson.fromJson(response.toString(), JsonObject.class);
+
+            // 提取UUID
+            String uuid = jsonObject.get("uuid").getAsString();
+
+            return uuid;
+        } else {
+            throw new Exception("GET请求失败，响应码: " + responseCode);
+        }
+    }
+
+
 
 
 }

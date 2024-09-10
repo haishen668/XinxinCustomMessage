@@ -2,7 +2,7 @@ name: XinxinCustomMessage
 version: '${project.version}'
 main: ltd.dreamcraft.xinxincustommessage.XinxinCustomMessage
 api-version: '1.13'
-softdepend: [ XinxinBotApi,PlaceholderAPI,PokemonBag ]
+softdepend: [ XinxinBotApi,PlaceholderAPI,PokemonBag,SkullAPI ]
 commands:
   xinxincustommessage:
     aliases: [ xxcm ]

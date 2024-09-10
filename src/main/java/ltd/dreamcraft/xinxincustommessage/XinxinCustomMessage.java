@@ -39,6 +39,7 @@ public class XinxinCustomMessage extends JavaPlugin {
     public static Map<String, Font> customFontList = new HashMap<>();
     public static boolean LOG = false;
     private static ScriptEngine scriptEngine;
+    private static CustomHook customHook;
     public static XinxinCustomMessage getInstance() {
         return instance;
     }
@@ -173,7 +174,8 @@ public class XinxinCustomMessage extends JavaPlugin {
         instance = this;
         saveDefaultConfig();
         //hook注册
-        new CustomHook().register();
+        customHook = new CustomHook();
+        customHook.register();
         File file = new File(getDataFolder(), "images/个人信息.png");
         if (!file.exists()) {
             saveResource("images/个人信息.png", false);
@@ -200,6 +202,7 @@ public class XinxinCustomMessage extends JavaPlugin {
 
     public void onDisable() {
         DataManager.saveCounts();
+        customHook.unregister();
     }
 
     public boolean onCommand(@NotNull CommandSender sender, @NotNull Command command, @NotNull String label, @NotNull String[] args) {

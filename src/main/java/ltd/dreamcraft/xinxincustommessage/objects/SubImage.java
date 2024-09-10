@@ -3,7 +3,7 @@ package ltd.dreamcraft.xinxincustommessage.objects;
 public class SubImage {
     public final String id;
 
-    public final String path;
+    public String path;
 
     public final int width;
 

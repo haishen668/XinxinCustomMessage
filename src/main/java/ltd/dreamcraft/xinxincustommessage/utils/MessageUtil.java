@@ -6,6 +6,8 @@ import com.xinxin.BotApi.BotBind;
 import ltd.dreamcraft.xinxincustommessage.Managers.DataManager;
 import ltd.dreamcraft.xinxincustommessage.XinxinCustomMessage;
 import ltd.dreamcraft.xinxincustommessage.objects.CustomImage;
+import ltd.dreamcraft.xinxincustommessage.objects.CustomText;
+import ltd.dreamcraft.xinxincustommessage.objects.SubImage;
 import me.clip.placeholderapi.PlaceholderAPI;
 import org.bukkit.Bukkit;
 import org.bukkit.OfflinePlayer;
@@ -51,6 +53,16 @@ public class MessageUtil {
                         response.add("无法找到图片ID: " + imageID);
                         continue;
                     }
+
+                    // 替换文本和路径中的{extra}拓展自定义占位符
+                    customImage.source = customImage.source.replaceAll("\\{extra}",extra);
+                    for (CustomText customText : customImage.customTexts) {
+                        customText.text = customText.text.replaceAll("\\{extra}",extra);
+                    }
+                    for (SubImage subImage : customImage.subImages) {
+                        subImage.path = subImage.path.replaceAll("\\{extra}",extra);
+                    }
+
                     //渲染图片
                     BufferedImage image = customImage.renderImage(offlinePlayer);
                     //发送信息

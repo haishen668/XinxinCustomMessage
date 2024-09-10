@@ -28,7 +28,7 @@ public class CustomImage {
     public final String id;
 
     // 图片的来源路径
-    public final String source;
+    public String source;
 
     // 图片的宽度
     public final int width;

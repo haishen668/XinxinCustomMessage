@@ -5,7 +5,7 @@ import java.awt.*;
 public class CustomText {
     public final String id;
 
-    public final String text;
+    public String text;
 
     public final Font font;
 

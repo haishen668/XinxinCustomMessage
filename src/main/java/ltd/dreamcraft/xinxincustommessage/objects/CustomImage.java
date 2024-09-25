@@ -11,19 +11,16 @@ import javax.imageio.ImageIO;
 import java.awt.*;
 import java.awt.image.BufferedImage;
 import java.io.*;
-import java.net.HttpURLConnection;
-import java.net.MalformedURLException;
 import java.net.URL;
 import java.net.URLConnection;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Objects;
-import java.util.stream.Collectors;
 
 /**
  * @author haishen668
  */
-public class CustomImage {
+public class CustomImage implements Cloneable, Serializable{
     // 图片的唯一标识符
     public final String id;
 
@@ -74,6 +71,32 @@ public class CustomImage {
         }
     }
 
+
+    // 深度克隆方法
+    @Override
+    public CustomImage clone() {
+        return this.deepClone();
+    }
+
+    public CustomImage deepClone() {
+        try {
+            // Serialize the object to a byte array
+            ByteArrayOutputStream byteOutStream = new ByteArrayOutputStream();
+            ObjectOutputStream outStream = new ObjectOutputStream(byteOutStream);
+            outStream.writeObject(this);
+            outStream.flush();
+
+            // Deserialize the byte array back into an object
+            ByteArrayInputStream byteInStream = new ByteArrayInputStream(byteOutStream.toByteArray());
+            ObjectInputStream inStream = new ObjectInputStream(byteInStream);
+            return (CustomImage) inStream.readObject();
+        } catch (IOException | ClassNotFoundException e) {
+            e.printStackTrace();
+            return null;
+        }
+    }
+
+
     // 调整图片大小
     public static BufferedImage resizeImage(BufferedImage originalImage, int targetWidth, int targetHeight) throws IOException {
         Image resultingImage = originalImage.getScaledInstance(targetWidth, targetHeight, 16);
@@ -86,17 +109,20 @@ public class CustomImage {
     }
 
     // 渲染图片
-    public BufferedImage renderImage(OfflinePlayer player) throws Exception {
+    public BufferedImage renderImage(OfflinePlayer player, String extra) throws Exception {
         BufferedImage srcImg;
 
-        // 解析图片路径，包括处理PlaceholderAPI和BotBind
-        String path;
-        if (player == null) {
-            path = this.source;
-        } else {
-            path = PlaceholderAPI.setPlaceholders(player, this.source);
+        // 解析图片路径，包括处理PlaceholderAPI和BotBind和{extra}
+        String path = this.source;
+        // 是否拥有{extra}
+        boolean hasExtra = !extra.isEmpty() && !extra.equals("") && extra != null;
+
+        if (hasExtra){
+            path = path.replaceAll("\\{extra}",extra);
         }
+
         if (player != null) {
+            path = PlaceholderAPI.setPlaceholders(player, path);
             path = path.replace("{qq}", BotBind.getBindQQ(player.getName()).toLowerCase());
         }
 
@@ -123,6 +149,12 @@ public class CustomImage {
         for (SubImage subImage : this.subImages) {
             BufferedImage image = null;
             String subImgPath = subImage.path;
+            // 添加子图片的路径中{extra}的解析
+            if (hasExtra){
+                subImgPath = subImgPath.replaceAll("\\{extra}",extra);
+            }
+
+
             subImgPath = PlaceholderAPI.setPlaceholders(player, subImgPath);
 
             // 处理子图片路径
@@ -167,6 +199,12 @@ public class CustomImage {
 
         for (CustomText customText : this.customTexts) {
             String text = customText.text;
+
+            // 添加图片中文本的{extra}的解析
+            if (hasExtra){
+                text = text.replaceAll("\\{extra}",extra);
+            }
+
             try {
                 text = PlaceholderAPI.setPlaceholders(player, text);
                 if (player != null) {

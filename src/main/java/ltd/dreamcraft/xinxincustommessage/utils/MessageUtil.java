@@ -9,6 +9,7 @@ import ltd.dreamcraft.xinxincustommessage.objects.CustomImage;
 import ltd.dreamcraft.xinxincustommessage.objects.CustomText;
 import ltd.dreamcraft.xinxincustommessage.objects.SubImage;
 import me.clip.placeholderapi.PlaceholderAPI;
+import org.apache.commons.lang3.SerializationUtils;
 import org.bukkit.Bukkit;
 import org.bukkit.OfflinePlayer;
 import org.bukkit.command.CommandSender;
@@ -53,22 +54,9 @@ public class MessageUtil {
                         response.add("无法找到图片ID: " + imageID);
                         continue;
                     }
-
-                    // 替换文本和路径中的{extra}拓展自定义占位符
-                    customImage.source = customImage.source.replaceAll("\\{extra}",extra);
-                    for (CustomText customText : customImage.customTexts) {
-                        customText.text = customText.text.replaceAll("\\{extra}",extra);
-                    }
-                    for (SubImage subImage : customImage.subImages) {
-                        subImage.path = subImage.path.replaceAll("\\{extra}",extra);
-                    }
-
                     //渲染图片
-                    BufferedImage image = customImage.renderImage(offlinePlayer);
-                    //发送信息
-//                    System.out.println(bufferedImgToMsg(image));
-//                    return Collections.singletonList(bufferedImgToMsg(image));
-                    //TODO 计数图片信息数量
+                    BufferedImage image = customImage.renderImage(offlinePlayer,extra);
+                    // 计数图片信息数量
                     DataManager.invokeCountsMap.put("images", DataManager.invokeCountsMap.get("images") + 1);
                     response.add(bufferedImgToMsg(image));
                 } catch (Exception e) {

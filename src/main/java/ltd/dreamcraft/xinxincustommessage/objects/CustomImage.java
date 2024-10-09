@@ -3,7 +3,7 @@ package ltd.dreamcraft.xinxincustommessage.objects;
 import com.xinxin.BotApi.BotBind;
 import ltd.dreamcraft.www.pokemonbag.Utils.ParsePokemon;
 import ltd.dreamcraft.xinxincustommessage.XinxinCustomMessage;
-import ltd.dreamcraft.xinxincustommessage.utils.TextSplitUtil;
+import ltd.dreamcraft.xinxincustommessage.utils.TextUtil;
 import me.clip.placeholderapi.PlaceholderAPI;
 import org.bukkit.OfflinePlayer;
 
@@ -20,7 +20,7 @@ import java.util.Objects;
 /**
  * @author haishen668
  */
-public class CustomImage implements Cloneable, Serializable{
+public class CustomImage implements Cloneable, Serializable {
     // 图片的唯一标识符
     public final String id;
 
@@ -117,8 +117,8 @@ public class CustomImage implements Cloneable, Serializable{
         // 是否拥有{extra}
         boolean hasExtra = !extra.isEmpty() && !extra.equals("") && extra != null;
 
-        if (hasExtra){
-            path = path.replaceAll("\\{extra}",extra);
+        if (hasExtra) {
+            path = path.replaceAll("\\{extra}", extra);
         }
 
         if (player != null) {
@@ -150,8 +150,8 @@ public class CustomImage implements Cloneable, Serializable{
             BufferedImage image = null;
             String subImgPath = subImage.path;
             // 添加子图片的路径中{extra}的解析
-            if (hasExtra){
-                subImgPath = subImgPath.replaceAll("\\{extra}",extra);
+            if (hasExtra) {
+                subImgPath = subImgPath.replaceAll("\\{extra}", extra);
             }
 
 
@@ -201,8 +201,8 @@ public class CustomImage implements Cloneable, Serializable{
             String text = customText.text;
 
             // 添加图片中文本的{extra}的解析
-            if (hasExtra){
-                text = text.replaceAll("\\{extra}",extra);
+            if (hasExtra) {
+                text = text.replaceAll("\\{extra}", extra);
             }
 
             try {
@@ -234,43 +234,42 @@ public class CustomImage implements Cloneable, Serializable{
             Font font = customText.font;
             boolean center = customText.center;
 
-            ArrayList<String> subString = TextSplitUtil.TextSpit(text);  // 切割文本
+            ArrayList<String> subString = TextUtil.split(text);  // 切割文本
             ArrayList<String> parseSubText = new ArrayList<>();  // 解析后的文本
 
 
             if (subString.isEmpty()) {
                 // 如果没有子文本，直接渲染文本
-                Color color = TextSplitUtil.ParseColor(TextSplitUtil.GetParseString(text, "color"));  // 解析颜色
+                Color color = TextUtil.parseColor(TextUtil.getParseString(text, "color"));  // 解析颜色
                 g2d.setFont(font);
                 g2d.setColor(color);
                 g2d.setRenderingHint(RenderingHints.KEY_ANTIALIASING, RenderingHints.VALUE_ANTIALIAS_ON);
                 // 判断center属性，调整绘制位置
                 if (center) {
-                    // 计算文本宽度
-                    int textWidth = TextSplitUtil.getStringWidth(font, TextSplitUtil.GetParseString(text, "string"));
+                    // 计算纯文本宽度(不包含颜色字符)
+                    int textWidth = TextUtil.getStringWidth(font, TextUtil.getParseString(text, "string"));
                     // 计算居中位置
                     x -= textWidth / 2;
                 }
-                g2d.drawString(TextSplitUtil.GetParseString(text, "string"), x, z);
+                g2d.drawString(TextUtil.getParseString(text, "string"), x, z);
             } else {
+                if (center) {
+                    String totalText = TextUtil.getParseString(text, "string");
+                    int totalTextWidth = TextUtil.getStringWidth(font, totalText);
+                    // 计算居中位置
+                    x -= totalTextWidth / 2;
+                }
                 int totalSubTextWidth = 0;
                 for (int i = 0; i < subString.size(); i++) {
                     String subText = subString.get(i);
-                    Color color = TextSplitUtil.ParseColor(TextSplitUtil.GetParseString(subText, "color"));
+                    Color color = TextUtil.parseColor(TextUtil.getParseString(subText, "color"));
                     if (i - 1 >= 0) {
-                        totalSubTextWidth += TextSplitUtil.getStringWidth(font, parseSubText.get(i - 1));
+                        totalSubTextWidth += TextUtil.getStringWidth(font, parseSubText.get(i - 1));
                     }
-                    parseSubText.add(TextSplitUtil.GetParseString(subText, "string"));
+                    parseSubText.add(TextUtil.getParseString(subText, "string"));
                     g2d.setFont(font);
                     g2d.setColor(color);
                     g2d.setRenderingHint(RenderingHints.KEY_ANTIALIASING, RenderingHints.VALUE_ANTIALIAS_ON);
-                    // 判断center属性，调整绘制位置
-                    if (center) {
-                        // 计算文本宽度
-                        int textWidth = TextSplitUtil.getStringWidth(font, parseSubText.get(i));
-                        // 计算居中位置
-                        x -= textWidth / 2;
-                    }
                     g2d.drawString(parseSubText.get(i), x + totalSubTextWidth, z);
                 }
             }

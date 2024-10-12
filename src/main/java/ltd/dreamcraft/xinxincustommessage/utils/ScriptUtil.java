@@ -1,6 +1,7 @@
 package ltd.dreamcraft.xinxincustommessage.utils;
 
 import com.xinxin.BotApi.BotAction;
+import org.bukkit.Bukkit;
 
 /**
  * @author haishen668
@@ -13,8 +14,14 @@ public class ScriptUtil {
             String command = parts[0].trim();
             String argument = parts[1].trim();
             switch (command) {
+                case "message":
                 case "msg":
                     BotAction.sendGroupMessage(groupId,argument,true);
+                    break;
+                case "command":
+                case "cmd":
+                    // 通过控制台身份执行命令
+                    Bukkit.dispatchCommand(Bukkit.getConsoleSender(), argument);
                     break;
                 // 可以添加更多的指令
                 default:

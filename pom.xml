@@ -62,6 +62,41 @@
 
     <dependencies>
         <dependency>
+            <groupId>local.libs</groupId>
+            <artifactId>SkullAPI</artifactId>
+            <version>1.1.10</version>
+            <scope>system</scope>
+            <systemPath>${project.basedir}/libs/[S][头颅前置]SkullAPI-1.1.10.jar</systemPath>
+        </dependency>
+        <dependency>
+            <groupId>local.libs</groupId>
+            <artifactId>PlaceholderAPI</artifactId>
+            <version>2.11.3</version>
+            <scope>system</scope>
+            <systemPath>${project.basedir}/libs/PlaceholderAPI-2.11.3.jar</systemPath>
+        </dependency>
+        <dependency>
+            <groupId>local.libs</groupId>
+            <artifactId>PokemonBag</artifactId>
+            <version>1.0.1</version>
+            <scope>system</scope>
+            <systemPath>${project.basedir}/libs/PokemonBag-1.0.1.jar</systemPath>
+        </dependency>
+        <dependency>
+            <groupId>local.libs</groupId>
+            <artifactId>spigot</artifactId>
+            <version>1.13</version>
+            <scope>system</scope>
+            <systemPath>${project.basedir}/libs/spigot-1.13.jar</systemPath>
+        </dependency>
+        <dependency>
+            <groupId>local.libs</groupId>
+            <artifactId>XinxinBotApi</artifactId>
+            <version>2.0.6-SNAPSHOT</version>
+            <scope>system</scope>
+            <systemPath>${project.basedir}/libs/XinxinBotApi-2.0.6-SNAPSHOT.jar</systemPath>
+        </dependency>
+        <dependency>
             <groupId>org.spigotmc</groupId>
             <artifactId>spigot-api</artifactId>
             <version>1.13-R0.1-SNAPSHOT</version>

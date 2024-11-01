@@ -24,7 +24,7 @@ jobs:
         with:
           java-version: '11' # 设置所需的 Java 版本（Minecraft通常使用Java 11）
           distribution: 'temurin'
-      
+
       - name: 构建 Maven 包 🔧
         run: mvn -B package --file pom.xml
 
@@ -33,20 +33,16 @@ jobs:
         uses: softprops/action-gh-release@v1
         with:
           tag_name: ${{ github.event.inputs.tag }} # 使用手动输入的标签名
-          name: '${{ github.event.inputs.tag }}' # 标签名
+          name: '${{ github.event.inputs.tag }}' # 项目名 - 标签名
           draft: false
           prerelease: false
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
-      - name: 上传插件 JAR 📦
+      - name: 查找并上传插件 JAR 📦
         run: |
-          for file in target/*.jar; do
-            if [[ ! $(basename "$file") =~ ^original.* ]]; then
-              echo "Uploading $file"
-              echo "$file" >> files.txt
-            fi
-          done
+          jars=$(find target -name '*.jar' ! -name 'original*.jar' -print0 | xargs -0 -I {} echo "{\"path\":\"{}\"}")
+          echo "[${jars}]" > files.json
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
@@ -54,6 +50,7 @@ jobs:
         uses: softprops/action-gh-release@v1
         with:
           tag_name: ${{ github.event.inputs.tag }} # 使用手动输入的标签名
-          files: ${{ github.workspace }}/files.txt # 上传的文件列表
+          files: |
+            $(cat files.json)
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}

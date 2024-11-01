@@ -39,18 +39,11 @@ jobs:
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
-      - name: 查找并上传插件 JAR 📦
-        run: |
-          jars=$(find target -name '*.jar' ! -name 'original*.jar' -print0 | xargs -0 -I {} echo "{\"path\":\"{}\"}")
-          echo "[${jars}]" > files.json
-        env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-
-      - name: 发布 JAR 文件
+      - name: 上传插件 JAR 📦
         uses: softprops/action-gh-release@v1
         with:
           tag_name: ${{ github.event.inputs.tag }} # 使用手动输入的标签名
           files: |
-            $(cat files.json)
+            target/*.jar
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}

@@ -1,0 +1,59 @@
+name: Release 🚀
+
+on:
+  push:
+    tags:
+      - 'v*' # 只在版本标签推送时触发 🔔
+  workflow_dispatch: # 允许手动触发工作流
+    inputs:
+      tag:
+        description: '发布的版本号'
+        required: true
+        default: 'v1.0.0' # 默认的版本号 
+
+jobs:
+  release:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: 检出代码 📥
+        uses: actions/checkout@v2
+
+      - name: 设置 JDK 版本 ☕
+        uses: actions/setup-java@v2
+        with:
+          java-version: '11' # 设置所需的 Java 版本（Minecraft通常使用Java 11）
+          distribution: 'temurin'
+      
+      - name: 构建 Maven 包 🔧
+        run: mvn -B package --file pom.xml
+
+      - name: 发布版本 📝
+        id: create_release
+        uses: softprops/action-gh-release@v1
+        with:
+          tag_name: ${{ github.event.inputs.tag }} # 使用手动输入的标签名
+          name: '${{ github.event.inputs.tag }}' # 标签名
+          draft: false
+          prerelease: false
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: 上传插件 JAR 📦
+        run: |
+          for file in target/*.jar; do
+            if [[ ! $(basename "$file") =~ ^original.* ]]; then
+              echo "Uploading $file"
+              echo "$file" >> files.txt
+            fi
+          done
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: 发布 JAR 文件
+        uses: softprops/action-gh-release@v1
+        with:
+          tag_name: ${{ github.event.inputs.tag }} # 使用手动输入的标签名
+          files: ${{ github.workspace }}/files.txt # 上传的文件列表
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}

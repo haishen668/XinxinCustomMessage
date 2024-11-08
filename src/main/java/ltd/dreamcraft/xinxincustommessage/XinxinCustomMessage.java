@@ -199,10 +199,8 @@ public class XinxinCustomMessage extends JavaPlugin {
             saveResource("images/精灵背包.png", false);
         }
         file = new File(getDataFolder(), "fonts");
-        System.out.println("测试");
         System.out.println(file.exists());
         if (!file.exists()) {
-            System.out.println("测试");
             file.mkdir();
             boolean isDownload = saveWebResource("https://pan.dreamcraft.ltd/s/b1olal", "fonts/fonts.zip", false);
             try {
@@ -238,7 +236,6 @@ public class XinxinCustomMessage extends JavaPlugin {
         getServer().getPluginManager().registerEvents(new MessageListener(), this);
         loadAllFonts();
         loadCustomMessages();
-        getLogger().info("Loaded");
         Metrics metrics = new Metrics(this, 21808);
         // 初始化JS引擎
         ScriptEngineManager scriptEngineManager = new ScriptEngineManager();

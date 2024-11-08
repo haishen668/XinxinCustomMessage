@@ -28,6 +28,8 @@ import java.io.InputStream;
 import java.io.OutputStream;
 import java.net.URL;
 import java.net.URLConnection;
+import java.nio.charset.Charset;
+import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.util.List;
 import java.util.*;
@@ -196,12 +198,27 @@ public class XinxinCustomMessage extends JavaPlugin {
         if (!file.exists()) {
             saveResource("images/精灵背包.png", false);
         }
-
+        file = new File(getDataFolder(), "fonts");
+        System.out.println("测试");
+        System.out.println(file.exists());
+        if (!file.exists()) {
+            System.out.println("测试");
+            file.mkdir();
+            boolean isDownload = saveWebResource("https://pan.dreamcraft.ltd/s/b1olal", "fonts/fonts.zip", false);
+            try {
+                if (isDownload) {
+                    File unzipDir = new File(getDataFolder(), "fonts");
+                    unzip(unzipDir.getPath() + "/fonts.zip", true);
+                }
+            } catch (IOException e) {
+                Bukkit.getConsoleSender().sendMessage("§f[§e" + this.getName() + "§f]§7 " + "pokemonImg.zip" + " §a解压失败");
+            }
+        }
         if (Bukkit.getPluginManager().getPlugin("PokemonBag") != null) {
             File pokeDir = new File(getDataFolder(), "images/pokemonImg");
             if (!pokeDir.exists()) {
                 pokeDir.mkdir();
-                boolean isDownload = saveWebResource("https://pan.dreamcraft.ltd/directlink/local/plugins/PokemonBag/resource/pokemonImg.zip", "images/pokemonImg.zip", false);
+                boolean isDownload = saveWebResource("https://pan.dreamcraft.ltd/s/ejlkcl", "images/pokemonImg.zip", false);
                 try {
                     if (isDownload) {
                         File unzipDir = new File(getDataFolder(), "images");
@@ -213,7 +230,7 @@ public class XinxinCustomMessage extends JavaPlugin {
             }
             File pokeBagFile = new File(getDataFolder(), "messages/pokemonbag.yml");
             if (!pokeBagFile.exists()) {
-                saveWebResource("https://pan.dreamcraft.ltd/directlink/local/plugins/PokemonBag/resource/pokemonbag.yml", "messages/pokemonbag.yml", false);
+                saveWebResource("https://pan.dreamcraft.ltd/directlink/s/z3hyog", "messages/pokemonbag.yml", false);
             }
         }
 
@@ -229,6 +246,14 @@ public class XinxinCustomMessage extends JavaPlugin {
 
     }
 
+    /**
+     * 解压ZIP文件到目标目录
+     *
+     * @param zipFilePath ZIP文件的路径
+     * @param delete      是否在解压后删除ZIP文件
+     * @return 解压后的文件列表，如果解压失败则返回null
+     * @throws IOException 如果解压过程中发生IO错误
+     */
     public void unzip(String zipFilePath, boolean delete) throws IOException {
         // 创建解压后文件的目标文件夹
         File destDir = new File(zipFilePath.substring(0, zipFilePath.lastIndexOf("/")));
@@ -236,42 +261,55 @@ public class XinxinCustomMessage extends JavaPlugin {
             destDir.mkdirs(); // 如果目标文件夹不存在，则创建
         }
 
-        try (ZipFile zipFile = new ZipFile(zipFilePath)) {
-            // 获取ZIP文件中的所有条目
-            Enumeration<? extends ZipEntry> entries = zipFile.entries();
+        // 定义尝试的编码顺序
+        Charset[] charsets = {Charset.forName("GBK"), StandardCharsets.UTF_8};
+        boolean success = false;
+        IOException exception = null;
 
-            while (entries.hasMoreElements()) {
-                ZipEntry entry = entries.nextElement();
-                // 生成解压后的目标文件路径
-                File entryDestination = new File(destDir, entry.getName());
+        for (Charset charset : charsets) {
+            try (ZipFile zipFile = new ZipFile(zipFilePath, charset)) {
+                // 获取ZIP文件中的所有条目
+                Enumeration<? extends ZipEntry> entries = zipFile.entries();
 
-                // 如果是文件夹，创建文件夹
-                if (entry.isDirectory()) {
-                    if (!entryDestination.exists()) {
-                        entryDestination.mkdirs(); // 创建文件夹
-                    }
-                } else {
-                    // 如果是文件，先确保父目录存在
-                    File parentDir = entryDestination.getParentFile();
-                    if (parentDir != null && !parentDir.exists()) {
-                        parentDir.mkdirs(); // 创建父目录
-                    }
+                while (entries.hasMoreElements()) {
+                    ZipEntry entry = entries.nextElement();
+                    // 生成解压后的目标文件路径
+                    File entryDestination = new File(destDir, entry.getName());
 
-                    // 解压文件
-                    try (InputStream in = zipFile.getInputStream(entry);
-                         OutputStream out = Files.newOutputStream(entryDestination.toPath())) {
+                    // 如果是文件夹，创建文件夹
+                    if (entry.isDirectory()) {
+                        if (!entryDestination.exists()) {
+                            entryDestination.mkdirs(); // 创建文件夹
+                        }
+                    } else {
+                        // 如果是文件，先确保父目录存在
+                        File parentDir = entryDestination.getParentFile();
+                        if (parentDir != null && !parentDir.exists()) {
+                            parentDir.mkdirs(); // 创建父目录
+                        }
 
-                        byte[] buffer = new byte[1024]; // 缓冲区
-                        int len;
-                        while ((len = in.read(buffer)) > 0) {
-                            out.write(buffer, 0, len); // 写入文件
+                        // 解压文件
+                        try (InputStream in = zipFile.getInputStream(entry);
+                             OutputStream out = Files.newOutputStream(entryDestination.toPath())) {
+
+                            byte[] buffer = new byte[1024]; // 缓冲区
+                            int len;
+                            while ((len = in.read(buffer)) > 0) {
+                                out.write(buffer, 0, len); // 写入文件
+                            }
                         }
                     }
                 }
+                success = true; // 如果没有抛出异常，表示成功
+                break; // 跳出循环，不再尝试其他编码
+            } catch (IOException e) {
+                Bukkit.getConsoleSender().sendMessage("§c使用编码 " + charset.name() + " 解压失败，尝试下一个编码");
             }
-        } catch (IOException e) {
-            // 捕获并处理解压异常
-            throw new IOException("解压ZIP文件时发生错误: " + zipFilePath, e);
+        }
+
+        if (!success) {
+            // 如果所有编码都失败，抛出最后一个异常
+            throw new IOException("解压ZIP文件时所有编码尝试均失败: " + zipFilePath);
         }
 
         // 如果需要删除ZIP文件，则删除
@@ -279,7 +317,7 @@ public class XinxinCustomMessage extends JavaPlugin {
             File zipFileToDelete = new File(zipFilePath);
             if (zipFileToDelete.exists() && zipFileToDelete.delete()) {
                 // 输出日志，表示解压成功并已删除ZIP文件
-                Bukkit.getConsoleSender().sendMessage("§f[§e" + this.getName() + "§f] §7§a资源解压成功");
+                Bukkit.getConsoleSender().sendMessage("§f[§e" + this.getName() + "§f] §7 资源解压成功");
             } else {
                 // 如果删除失败，输出失败日志
                 Bukkit.getConsoleSender().sendMessage("§cZIP文件解压成功，但删除文件失败: " + zipFilePath);
@@ -289,6 +327,7 @@ public class XinxinCustomMessage extends JavaPlugin {
             Bukkit.getConsoleSender().sendMessage("§aZIP文件解压成功: " + zipFilePath);
         }
     }
+
 
     public boolean saveWebResource(String url, String resourcePath, boolean replace) {
         if (url == null || url.isEmpty()) {

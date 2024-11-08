@@ -1,7 +1,7 @@
 package ltd.dreamcraft.xinxincustommessage.objects;
 
 import com.xinxin.BotApi.BotBind;
-import ltd.dreamcraft.www.pokemonbag.Utils.ParsePokemon;
+import io.github.ParsePokemon;
 import ltd.dreamcraft.xinxincustommessage.XinxinCustomMessage;
 import ltd.dreamcraft.xinxincustommessage.utils.TextUtil;
 import me.clip.placeholderapi.PlaceholderAPI;

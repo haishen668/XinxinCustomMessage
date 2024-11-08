@@ -16,8 +16,6 @@ import org.bukkit.command.CommandSender;
 import org.bukkit.configuration.Configuration;
 import org.bukkit.configuration.ConfigurationSection;
 import org.bukkit.configuration.file.YamlConfiguration;
-import org.bukkit.event.Listener;
-import org.bukkit.plugin.Plugin;
 import org.bukkit.plugin.java.JavaPlugin;
 import org.jetbrains.annotations.NotNull;
 
@@ -26,9 +24,19 @@ import javax.script.ScriptEngineManager;
 import java.awt.*;
 import java.io.File;
 import java.io.IOException;
+import java.io.InputStream;
+import java.io.OutputStream;
+import java.net.URL;
+import java.net.URLConnection;
+import java.nio.file.Files;
 import java.util.List;
 import java.util.*;
 import java.util.concurrent.ConcurrentHashMap;
+import java.util.concurrent.ConcurrentMap;
+import java.util.concurrent.ThreadLocalRandom;
+import java.util.logging.Level;
+import java.util.zip.ZipEntry;
+import java.util.zip.ZipFile;
 
 public class XinxinCustomMessage extends JavaPlugin {
     public static XinxinCustomMessage instance;
@@ -188,8 +196,29 @@ public class XinxinCustomMessage extends JavaPlugin {
         if (!file.exists()) {
             saveResource("images/精灵背包.png", false);
         }
+
+        if (Bukkit.getPluginManager().getPlugin("PokemonBag") != null) {
+            File pokeDir = new File(getDataFolder(), "images/pokemonImg");
+            if (!pokeDir.exists()) {
+                pokeDir.mkdir();
+                boolean isDownload = saveWebResource("https://pan.dreamcraft.ltd/directlink/local/plugins/PokemonBag/resource/pokemonImg.zip", "images/pokemonImg.zip", false);
+                try {
+                    if (isDownload) {
+                        File unzipDir = new File(getDataFolder(), "images");
+                        unzip(unzipDir.getPath() + "/pokemonImg.zip", true);
+                    }
+                } catch (IOException e) {
+                    Bukkit.getConsoleSender().sendMessage("§f[§e" + this.getName() + "§f]§7 " + "pokemonImg.zip" + " §a解压失败");
+                }
+            }
+            File pokeBagFile = new File(getDataFolder(), "messages/pokemonbag.yml");
+            if (!pokeBagFile.exists()) {
+                saveWebResource("https://pan.dreamcraft.ltd/directlink/local/plugins/PokemonBag/resource/pokemonbag.yml", "messages/pokemonbag.yml", false);
+            }
+        }
+
         new DataManager();
-        getServer().getPluginManager().registerEvents((Listener) new MessageListener(), (Plugin) this);
+        getServer().getPluginManager().registerEvents(new MessageListener(), this);
         loadAllFonts();
         loadCustomMessages();
         getLogger().info("Loaded");
@@ -198,6 +227,200 @@ public class XinxinCustomMessage extends JavaPlugin {
         ScriptEngineManager scriptEngineManager = new ScriptEngineManager();
         scriptEngine = scriptEngineManager.getEngineByName("JavaScript");
 
+    }
+
+    public void unzip(String zipFilePath, boolean delete) throws IOException {
+        // 创建解压后文件的目标文件夹
+        File destDir = new File(zipFilePath.substring(0, zipFilePath.lastIndexOf("/")));
+        if (!destDir.exists()) {
+            destDir.mkdirs(); // 如果目标文件夹不存在，则创建
+        }
+
+        try (ZipFile zipFile = new ZipFile(zipFilePath)) {
+            // 获取ZIP文件中的所有条目
+            Enumeration<? extends ZipEntry> entries = zipFile.entries();
+
+            while (entries.hasMoreElements()) {
+                ZipEntry entry = entries.nextElement();
+                // 生成解压后的目标文件路径
+                File entryDestination = new File(destDir, entry.getName());
+
+                // 如果是文件夹，创建文件夹
+                if (entry.isDirectory()) {
+                    if (!entryDestination.exists()) {
+                        entryDestination.mkdirs(); // 创建文件夹
+                    }
+                } else {
+                    // 如果是文件，先确保父目录存在
+                    File parentDir = entryDestination.getParentFile();
+                    if (parentDir != null && !parentDir.exists()) {
+                        parentDir.mkdirs(); // 创建父目录
+                    }
+
+                    // 解压文件
+                    try (InputStream in = zipFile.getInputStream(entry);
+                         OutputStream out = Files.newOutputStream(entryDestination.toPath())) {
+
+                        byte[] buffer = new byte[1024]; // 缓冲区
+                        int len;
+                        while ((len = in.read(buffer)) > 0) {
+                            out.write(buffer, 0, len); // 写入文件
+                        }
+                    }
+                }
+            }
+        } catch (IOException e) {
+            // 捕获并处理解压异常
+            throw new IOException("解压ZIP文件时发生错误: " + zipFilePath, e);
+        }
+
+        // 如果需要删除ZIP文件，则删除
+        if (delete) {
+            File zipFileToDelete = new File(zipFilePath);
+            if (zipFileToDelete.exists() && zipFileToDelete.delete()) {
+                // 输出日志，表示解压成功并已删除ZIP文件
+                Bukkit.getConsoleSender().sendMessage("§f[§e" + this.getName() + "§f] §7§a资源解压成功");
+            } else {
+                // 如果删除失败，输出失败日志
+                Bukkit.getConsoleSender().sendMessage("§cZIP文件解压成功，但删除文件失败: " + zipFilePath);
+            }
+        } else {
+            // 输出日志，表示解压成功但未删除ZIP文件
+            Bukkit.getConsoleSender().sendMessage("§aZIP文件解压成功: " + zipFilePath);
+        }
+    }
+
+    public boolean saveWebResource(String url, String resourcePath, boolean replace) {
+        if (url == null || url.isEmpty()) {
+            throw new IllegalArgumentException("URL不能为空或为空字符串");
+        }
+
+        if (resourcePath == null || resourcePath.isEmpty()) {
+            throw new IllegalArgumentException("路径不能为空");
+        }
+
+        File outFile = new File("plugins/" + this.getName(), resourcePath);
+        File outDir = outFile.getParentFile();
+
+        String fileName = resourcePath.substring(resourcePath.lastIndexOf('/') + 1);
+
+        if (!outDir.exists()) {
+            outDir.mkdirs();
+        }
+
+        if (!outFile.exists() || replace) {
+            try {
+                URL website = new URL(url);
+                URLConnection connection = website.openConnection();
+                int contentLength = connection.getContentLength();
+
+                if (contentLength == -1) {
+                    getLogger().log(Level.WARNING, "无法确定文件大小");
+                }
+
+                try (InputStream in = connection.getInputStream();
+                     OutputStream out = Files.newOutputStream(outFile.toPath())) {
+
+                    printProgress(fileName, 0, contentLength);
+
+                    byte[] buf = new byte[1024];
+                    int bytesRead;
+                    int totalBytesRead = 0;
+                    while ((bytesRead = in.read(buf)) != -1) {
+                        out.write(buf, 0, bytesRead);
+                        totalBytesRead += bytesRead;
+                        printProgress(fileName, totalBytesRead, contentLength);
+                    }
+                    Bukkit.getConsoleSender().sendMessage("§f[§e" + this.getName() + "§f] §7" + fileName + " §a下载成功");
+                    return true; // 下载成功
+                }
+            } catch (IOException ex) {
+                Bukkit.getConsoleSender().sendMessage("§f[§e" + this.getName() + "§f]§7 " + fileName + " §c下载失败");
+                return false; // 下载失败
+            }
+        } else {
+            getLogger().log(Level.WARNING, "无法保存资源，因为文件 " + outFile.getName() + " 已存在");
+            return false; // 文件已存在，不进行下载
+        }
+    }
+
+    // 辅助类，用于存储每个文件的进度信息
+    private static class ProgressInfo {
+        List<Integer> steps; // 需要输出进度的百分比步骤
+        int currentStepIndex; // 当前需要输出的步骤索引
+        String[] symbols = {"|", "/", "-", "\\"}; // 进度条旋转符号
+        int symbolIndex; // 当前符号的索引
+
+        ProgressInfo(List<Integer> steps) {
+            this.steps = steps;
+            this.currentStepIndex = 0;
+            this.symbolIndex = 0;
+        }
+
+        // 获取下一个符号
+        String getNextSymbol() {
+            String symbol = symbols[symbolIndex];
+            symbolIndex = (symbolIndex + 1) % symbols.length;
+            return symbol;
+        }
+    }
+
+    // 存储每个文件的进度信息
+    private ConcurrentMap<String, ProgressInfo> progressMap = new ConcurrentHashMap<>();
+
+    /**
+     * 打印进度条的方法
+     *
+     * @param fileName     文件名
+     * @param currentBytes 当前已完成的字节数
+     * @param totalBytes   总字节数
+     */
+    public void printProgress(String fileName, int currentBytes, int totalBytes) {
+        // 计算当前百分比
+        int percentage = (int) ((currentBytes / (double) totalBytes) * 100);
+
+        // 获取或初始化 ProgressInfo
+        ProgressInfo progressInfo = progressMap.computeIfAbsent(fileName, key -> {
+            // 随机选择2-5个步骤
+            int stepCount = ThreadLocalRandom.current().nextInt(2, 6);
+            Set<Integer> stepSet = new TreeSet<>();
+            while (stepSet.size() < stepCount) {
+                // 随机生成1-99的百分比，避免0和100
+                int step = ThreadLocalRandom.current().nextInt(1, 100);
+                stepSet.add(step);
+            }
+            List<Integer> steps = new ArrayList<>(stepSet);
+            steps.add(100); // 确保100%总是输出
+            return new ProgressInfo(steps);
+        });
+
+        // 检查是否达到了当前步骤
+        while (progressInfo.currentStepIndex < progressInfo.steps.size() && percentage >= progressInfo.steps.get(progressInfo.currentStepIndex)) {
+            int currentStepPercentage = progressInfo.steps.get(progressInfo.currentStepIndex);
+            String symbol = progressInfo.getNextSymbol();
+
+            // 生成进度条
+            StringBuilder progressBar = new StringBuilder("[");
+            int progressMarks = currentStepPercentage / 5; // 每5%一个"="
+            for (int i = 0; i < 20; i++) { // 总长度20
+                if (i < progressMarks) {
+                    progressBar.append("=");
+                } else {
+                    progressBar.append(" ");
+                }
+            }
+            progressBar.append("] ");
+
+            // 输出进度
+            getLogger().info(String.format("%s %s %d%%", fileName, progressBar.toString(), currentStepPercentage));
+
+            progressInfo.currentStepIndex++;
+        }
+
+        // 如果达到或超过100%，移除进度信息
+        if (percentage >= 100) {
+            progressMap.remove(fileName);
+        }
     }
 
     public void onDisable() {
@@ -257,28 +480,6 @@ public class XinxinCustomMessage extends JavaPlugin {
                 } else {
                     sender.sendMessage("§c消息id不存在或者群号不是数字");
                 }
-//                long id;
-//                CustomMessage message = null;
-//                for (CustomMessage customMessage : customMessageList) {
-//                    if (customMessage.getId().equalsIgnoreCase(args[3])) {
-//                        message = customMessage;
-//                        break;
-//                    }
-//                }
-//                if (message == null) {
-//                    sender.sendMessage("§c消息ID: §b" + args[3] + " §c不存在!");
-//                    return;
-//                }
-//                OfflinePlayer player = Bukkit.getOfflinePlayer(args[2]);
-//                try {
-//                    id = Long.parseLong(args[1]);
-//                } catch (Exception ignored) {
-//                    sender.sendMessage("§a群号必须为数字!");
-//                    return;
-//                }
-//                List<String> response = MessageUtil.getMsg(message.getResponses(), player, Math.toIntExact(id), Math.toIntExact(Long.valueOf(0L)), "", "");
-//                if (!response.isEmpty())
-//                    BotAction.sendGroupMessage((int) id,response, true);
             });
             return true;
         }
@@ -292,12 +493,24 @@ public class XinxinCustomMessage extends JavaPlugin {
             });
             return true;
         }
-        sender.sendMessage("§a/xxcm reload");
-        sender.sendMessage("§a/xxcm fonts - 查看字体列表");
-        sender.sendMessage("§a/xxcm log - 开启或关闭输出消息的mirai码");
-        sender.sendMessage("§a/xxcm listmessages - 列出已经加载的自定义消息模版");
-        sender.sendMessage("§a/xxcm listimages - 列出已经加载的自定义图片模版");
-        sender.sendMessage("§a/xxcm send <群号> <玩家> <消息ID> [可选extra]- 向群内发送信息");
+        // 添加插件名称和版本信息
+        sender.sendMessage("  §f§lXinxinCustomMessage[Help] " + XinxinCustomMessage.getInstance().getDescription().getVersion());
+        sender.sendMessage("");
+        sender.sendMessage("  §7[命令]: §f/xxcm §7[...]");
+
+        // 列出各个命令及其描述
+        sender.sendMessage("§7     - §freload");
+        sender.sendMessage("§7       重载配置文件");
+        sender.sendMessage("§7     - §ffonts");
+        sender.sendMessage("§7       查看字体列表");
+        sender.sendMessage("§7     - §flog");
+        sender.sendMessage("§7       开启或关闭输出消息的mirai码");
+        sender.sendMessage("§7     - §flistmessages");
+        sender.sendMessage("§7       列出已经加载的自定义消息模版");
+        sender.sendMessage("§7     - §flistimages");
+        sender.sendMessage("§7       列出已经加载的自定义图片模版");
+        sender.sendMessage("§7     - §fsend <群号> <玩家> <消息ID> [可选extra]");
+        sender.sendMessage("§7       向群内发送信息");
         return true;
     }
 

@@ -118,6 +118,8 @@ public class TextUtil {
                         break;
                 }
             }
+        } else {
+            return Color.black;
         }
         XinxinCustomMessage.getInstance().getLogger().severe("无效的颜色码");
         return null;

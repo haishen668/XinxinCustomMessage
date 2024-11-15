@@ -164,10 +164,10 @@ public class XinxinCustomMessage extends JavaPlugin {
             if (!folder.exists())
                 folder.mkdirs();
             if (folder.isDirectory())
-                for (File file : folder.listFiles()) {
+                for (File file : Objects.requireNonNull(folder.listFiles())) {
                     if (file.getName().endsWith(".yml"))
                         try {
-                            loadCustomMessage((Configuration) YamlConfiguration.loadConfiguration(file));
+                            loadCustomMessage(YamlConfiguration.loadConfiguration(file));
                         } catch (Exception e) {
                             if (getInstance().getConfig().getBoolean("debug")) {
                                 e.printStackTrace();
@@ -199,7 +199,6 @@ public class XinxinCustomMessage extends JavaPlugin {
             saveResource("images/精灵背包.png", false);
         }
         file = new File(getDataFolder(), "fonts");
-        System.out.println(file.exists());
         if (!file.exists()) {
             file.mkdir();
             boolean isDownload = saveWebResource("https://pan.dreamcraft.ltd/s/b1olal", "fonts/fonts.zip", false);

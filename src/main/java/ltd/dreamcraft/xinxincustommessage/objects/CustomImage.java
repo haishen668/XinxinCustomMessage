@@ -5,6 +5,7 @@ import io.github.ParsePokemon;
 import ltd.dreamcraft.xinxincustommessage.XinxinCustomMessage;
 import ltd.dreamcraft.xinxincustommessage.utils.TextUtil;
 import me.clip.placeholderapi.PlaceholderAPI;
+import org.bukkit.Bukkit;
 import org.bukkit.OfflinePlayer;
 
 import javax.imageio.ImageIO;
@@ -167,7 +168,11 @@ public class CustomImage implements Cloneable, Serializable {
                 // 在pokemonbag插件中写一个方法，返回一个image对象
                 String imageFolder = "plugins/XinxinCustomMessage/images/pokemonImg";
                 if (player != null) {
-                    image = ParsePokemon.pokemonToImg(imageFolder, subImgPath, player);
+                    try {
+                        image = ParsePokemon.pokemonToImg(imageFolder, subImgPath, player);
+                    } catch (NoClassDefFoundError e) {
+                        Bukkit.getConsoleSender().sendMessage("§f[§e" + XinxinCustomMessage.getInstance().getName() + "§f]§c " + "发生错误!,请检查PokemonBag的版本是否为最新");
+                    }
                 }
                 if (image == null) {
                     continue;
@@ -222,7 +227,11 @@ public class CustomImage implements Cloneable, Serializable {
             // 处理包含Pokemon的文本
             if (text.contains("[pokemon]")) {
                 if (player != null) {
-                    text = ParsePokemon.pokemonToString(text, player);
+                    try {
+                        text = ParsePokemon.pokemonToString(text, player);
+                    } catch (NoClassDefFoundError e) {
+                        Bukkit.getConsoleSender().sendMessage("§f[§e" + XinxinCustomMessage.getInstance().getName() + "§f]§c " + "发生错误!,请检查PokemonBag的版本是否为最新");
+                    }
                 }
                 if (text == null) {
                     continue;

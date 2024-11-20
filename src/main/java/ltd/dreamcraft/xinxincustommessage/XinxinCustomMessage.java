@@ -180,12 +180,18 @@ public class XinxinCustomMessage extends JavaPlugin {
         instance.getLogger().info("§a载入了" + customMessageList.size() + "条自定义信息以及" + customImageList.size() + "条自定义图片" + customFontList.size() + "个自定义字体");
     }
 
+    @Override
     public void onEnable() {
         instance = this;
         saveDefaultConfig();
         //hook注册
-        customHook = new CustomHook();
-        customHook.register();
+        if (Bukkit.getPluginManager().getPlugin("PlaceholderAPI") != null) {
+            customHook = new CustomHook();
+            customHook.register();
+        } else {
+            Bukkit.getConsoleSender().sendMessage("§f[§e" + this.getName() + "§f]§7 " + "缺少前置插件 §cPlaceholderAPI §7请自行安装");
+        }
+
         File file = new File(getDataFolder(), "images/个人信息.png");
         if (!file.exists()) {
             saveResource("images/个人信息.png", false);
@@ -235,7 +241,8 @@ public class XinxinCustomMessage extends JavaPlugin {
         getServer().getPluginManager().registerEvents(new MessageListener(), this);
         loadAllFonts();
         loadCustomMessages();
-        Metrics metrics = new Metrics(this, 21808);
+        // 初始化Metrics
+        new Metrics(this, 21808);
         // 初始化JS引擎
         ScriptEngineManager scriptEngineManager = new ScriptEngineManager();
         scriptEngine = scriptEngineManager.getEngineByName("JavaScript");

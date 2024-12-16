@@ -55,6 +55,37 @@ public class MessageListener implements Listener {
         if (XinxinCustomMessage.LOG)
             XinxinCustomMessage.getInstance().getLogger().info("§a群[" + event.getGroup_id() + "]: §b" + event.getMessage());
 
+
+        // 设置用户代理对象
+        long userIdProxy = event.getUser_id();
+
+        // 设置消息代理对象
+        String messageProxy = event.getMessage();
+
+        List<String> blackList = XinxinCustomMessage.getInstance().getConfig().getStringList("global-setting.black_list");
+        // 屏蔽黑名单用户的消息
+        if (blackList != null && !blackList.isEmpty() && blackList.contains(String.valueOf(userIdProxy))) {
+            return;
+        }
+
+        // 全局管理员 控制对话
+        List<String> adminsList = XinxinCustomMessage.getInstance().getConfig().getStringList("global-setting.admins");
+        if (adminsList != null && !adminsList.isEmpty() && adminsList.contains(String.valueOf(userIdProxy))) {
+            // 去除@的CQ码 及其前后空白字符串
+            if (messageProxy.startsWith("[CQ:at,qq=")) {
+                String regex = "\\[CQ:at,qq=(\\d+)\\]";
+
+                Pattern pattern = Pattern.compile(regex);
+                Matcher matcher = pattern.matcher(messageProxy);
+                if (matcher.find()) {
+                    // 赋值给代理对象
+                    userIdProxy = Long.parseLong(matcher.group(1));
+                    // 替换掉匹配到的 CQ 码 并且去除空白字符
+                    messageProxy = matcher.replaceAll("").trim();
+                }
+            }
+        }
+
         for (CustomMessage customMessage : XinxinCustomMessage.customMessageList) {//遍历所有信息
             // 检查信息触发群 是否在监听的列表中
             if (!customMessage.groups.isEmpty() && !customMessage.groups.contains(event.getGroup_id())) {
@@ -63,7 +94,7 @@ public class MessageListener implements Listener {
             boolean regex = false;  //标记：是否是正则表达式
             if (customMessage.trigger.startsWith("[regex]")) { //是否以正则表达式 开头
                 String pattern = customMessage.trigger.replace("[regex]", "").trim();
-                Matcher matcher = Pattern.compile(pattern).matcher(event.getMessage());
+                Matcher matcher = Pattern.compile(pattern).matcher(messageProxy);
                 if (matcher.find())
                     regex = true;
             }
@@ -76,9 +107,9 @@ public class MessageListener implements Listener {
             //         continue;
             //     }
             //
-            if (event.getMessage().equalsIgnoreCase(customMessage.trigger) || regex || customMessage.trigger.contains("{extra}")) {
+            if (messageProxy.equalsIgnoreCase(customMessage.trigger) || regex || customMessage.trigger.contains("{extra}")) {
                 //信息和关键词完全匹配 || 符合正则表达式 || (是否包含{extra} => 关键词中包含触发器)
-                String message = event.getMessage();
+                String message = messageProxy;
                 String trigger = customMessage.trigger;
 
                 if (trigger.contains("{extra}")) {
@@ -99,14 +130,14 @@ public class MessageListener implements Listener {
                     }
                 }
 
-                if (customMessage.admins.isEmpty() || customMessage.admins.contains(event.getUser_id())) {
-                    String bindPlayerName = BotBind.getBindPlayerName(String.valueOf(event.getUser_id()));
+                if (customMessage.admins.isEmpty() || customMessage.admins.contains(userIdProxy)) {
+                    String bindPlayerName = BotBind.getBindPlayerName(String.valueOf(userIdProxy));
                     String extra = !regex ? message : ""; //正则没匹配到就返回 message
                     if (customMessage.unbind_messages.isEmpty() || bindPlayerName != null) {
                         if (customMessage.scripts.isEmpty()) {
-                            MessageUtil.sendMessage(customMessage.responses, event.getGroup_id(), event.getUser_id(), bindPlayerName, extra);
+                            MessageUtil.sendMessage(customMessage.responses, event.getGroup_id(), userIdProxy, bindPlayerName, extra);
                             return;
-                        }else {
+                        } else {
                             ScriptEngine scriptEngine = XinxinCustomMessage.getScriptEngine();
                             List<String> scripts = customMessage.getScripts();
                             OfflinePlayer offlinePlayer = Bukkit.getOfflinePlayer(bindPlayerName);
@@ -137,11 +168,11 @@ public class MessageListener implements Listener {
                                     }
                                 }
                             }
-                            MessageUtil.sendMessage(customMessage.responses, event.getGroup_id(), event.getUser_id(), bindPlayerName, extra);
+                            MessageUtil.sendMessage(customMessage.responses, event.getGroup_id(), userIdProxy, bindPlayerName, extra);
                             return;
                         }
                     }
-                    MessageUtil.sendMessage(customMessage.unbind_messages, event.getGroup_id(), event.getUser_id(), null, extra);
+                    MessageUtil.sendMessage(customMessage.unbind_messages, event.getGroup_id(), userIdProxy, null, extra);
                 } else {
                     BotAction.sendGroupMessage(event.getGroup_id(), "你没有权限使用该指令", true);
                 }

@@ -37,7 +37,7 @@ public class MessageListener implements Listener {
 
 
             if ((customMessage.groups.isEmpty() || customMessage.groups.contains(event.getGroup_id())) &&
-                    "[leave]".equalsIgnoreCase(customMessage.trigger)
+                    ("[leave]".equalsIgnoreCase(customMessage.trigger) || "[quit]".equalsIgnoreCase(customMessage.trigger))
                     && !event.isIncrease()) {
                 String bindPlayerName = BotBind.getBindPlayerName(String.valueOf(event.getUser_id()));
                 if (customMessage.unbind_messages.isEmpty() || bindPlayerName != null) {

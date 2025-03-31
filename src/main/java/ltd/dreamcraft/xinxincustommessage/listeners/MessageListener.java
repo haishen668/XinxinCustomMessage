@@ -143,7 +143,7 @@ public class MessageListener implements Listener {
                             OfflinePlayer offlinePlayer = Bukkit.getOfflinePlayer(bindPlayerName);
                             for (String script : scripts) {
                                 // 替换{extra}占位符
-                                script = script.replaceAll("\\{extra}",extra);
+                                script = script.replaceAll("\\{extra}", extra);
                                 script = PlaceholderAPI.setPlaceholders(offlinePlayer, script); // 解析papi变量 和
                                 // script == %player_level% >= 50 -> msg:&7您需到达50级才可领取本邮件
                                 String[] splitScript = script.split("->");
@@ -157,12 +157,12 @@ public class MessageListener implements Listener {
                                                 // 条件不符合 执行下方语句
                                                 String executeScript = splitScript[1];
                                                 // 使用自制脚本解析器解析
-                                                ScriptUtil.execute(event.getGroup_id(),executeScript);
+                                                ScriptUtil.execute(event.getGroup_id(), executeScript);
                                                 return;
                                             }
                                         }
                                     } catch (ScriptException e) {
-                                        BotAction.sendGroupMessage(event.getGroup_id(),"脚本解析异常",true);
+                                        BotAction.sendGroupMessage(event.getGroup_id(), "脚本解析异常", true);
                                         e.printStackTrace();
                                         return;
                                     }

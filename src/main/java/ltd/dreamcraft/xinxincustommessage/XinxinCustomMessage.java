@@ -16,6 +16,7 @@ import org.bukkit.command.CommandSender;
 import org.bukkit.configuration.Configuration;
 import org.bukkit.configuration.ConfigurationSection;
 import org.bukkit.configuration.file.YamlConfiguration;
+import org.bukkit.plugin.Plugin;
 import org.bukkit.plugin.java.JavaPlugin;
 import org.jetbrains.annotations.NotNull;
 
@@ -466,8 +467,22 @@ public class XinxinCustomMessage extends JavaPlugin {
     }
 
     public void onDisable() {
-        DataManager.saveCounts();
+        String version = getPluginVersion("PlaceHolderAPI");
         customHook.unregister();
+        DataManager.saveCounts();
+    }
+
+    private static String getPluginVersion(String pluginName) {
+        // 获取插件管理器
+        Plugin targetPlugin = Bukkit.getPluginManager().getPlugin(pluginName);
+
+        // 检查插件是否存在
+        if (targetPlugin != null && targetPlugin.isEnabled()) {
+            // 返回插件的版本号
+            return targetPlugin.getDescription().getVersion();
+        } else {
+            return "插件未找到或未启用";
+        }
     }
 
     public boolean onCommand(@NotNull CommandSender sender, @NotNull Command command, @NotNull String label, @NotNull String[] args) {

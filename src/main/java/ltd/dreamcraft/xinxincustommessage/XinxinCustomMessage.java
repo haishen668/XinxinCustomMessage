@@ -47,7 +47,7 @@ public class XinxinCustomMessage extends JavaPlugin {
     public static volatile Set<CustomMessage> customMessageList = ConcurrentHashMap.newKeySet();
 
     public static volatile Set<CustomImage> customImageList = ConcurrentHashMap.newKeySet();
-    public static volatile Map<String, Font> customFontList = new HashMap<>();
+    public static volatile Map<String, Font> customFontList = new ConcurrentHashMap<>();
     public static boolean LOG = false;
     private static ScriptEngine scriptEngine;
     private static CustomHook customHook;
@@ -56,7 +56,7 @@ public class XinxinCustomMessage extends JavaPlugin {
     }
 
     public static void loadAllFonts() {
-        Map<String, Font> newFonts = new HashMap<>();
+        Map<String, Font> newFonts = new ConcurrentHashMap<>();
         File directory = new File(XinxinCustomMessage.getInstance().getDataFolder(), "fonts");
         if (!directory.exists()) {
             directory.mkdir();
@@ -358,9 +358,10 @@ public class XinxinCustomMessage extends JavaPlugin {
         }
 
         if (!outFile.exists() || replace) {
+            URLConnection connection = null;
             try {
                 URL website = new URL(url);
-                URLConnection connection = website.openConnection();
+                connection = website.openConnection();
                 int contentLength = connection.getContentLength();
 
                 if (contentLength == -1) {
@@ -386,6 +387,10 @@ public class XinxinCustomMessage extends JavaPlugin {
             } catch (IOException ex) {
                 Bukkit.getConsoleSender().sendMessage("§f[§e" + this.getName() + "§f]§7 " + fileName + " §c下载失败");
                 return false; // 下载失败
+            } finally {
+                if (connection instanceof java.net.HttpURLConnection) {
+                    ((java.net.HttpURLConnection) connection).disconnect();
+                }
             }
         } else {
             getLogger().log(Level.WARNING, "无法保存资源，因为文件 " + outFile.getName() + " 已存在");

@@ -51,9 +51,10 @@ public class CustomImage implements Cloneable, Serializable {
 
     public static BufferedImage downloadImage(String link) {
         InputStream in = null;
+        URLConnection connection = null;
         try {
             URL url = new URL(link);
-            URLConnection connection = url.openConnection();
+            connection = url.openConnection();
             connection.setConnectTimeout(20000);
             connection.setReadTimeout(20000);
             connection.setUseCaches(false);
@@ -71,6 +72,9 @@ public class CustomImage implements Cloneable, Serializable {
         } finally {
             if (in != null) {
                 try { in.close(); } catch (IOException ignored) {}
+            }
+            if (connection instanceof java.net.HttpURLConnection) {
+                ((java.net.HttpURLConnection) connection).disconnect();
             }
         }
     }
@@ -125,10 +129,19 @@ public class CustomImage implements Cloneable, Serializable {
         }
 
         if (player != null) {
-            path = PlaceholderAPI.setPlaceholders(player, path);
-            String qq = BotBind.getBindQQ(player.getName());
-            if (qq != null) {
-                path = path.replace("{qq}", qq.toLowerCase());
+            try {
+                path = PlaceholderAPI.setPlaceholders(player, path);
+            } catch (IllegalStateException e) {
+                if (XinxinCustomMessage.getInstance().getConfig().getBoolean("debug")) {
+                    e.printStackTrace();
+                }
+            }
+            String playerName = player.getName();
+            if (playerName != null) {
+                String qq = BotBind.getBindQQ(playerName);
+                if (qq != null) {
+                    path = path.replace("{qq}", qq.toLowerCase());
+                }
             }
         }
 
@@ -160,14 +173,23 @@ public class CustomImage implements Cloneable, Serializable {
                 }
 
                 if (player != null) {
-                    subImgPath = PlaceholderAPI.setPlaceholders(player, subImgPath);
+                    try {
+                        subImgPath = PlaceholderAPI.setPlaceholders(player, subImgPath);
+                    } catch (IllegalStateException e) {
+                        if (XinxinCustomMessage.getInstance().getConfig().getBoolean("debug")) {
+                            e.printStackTrace();
+                        }
+                    }
                 }
 
                 if (subImgPath.startsWith("[url]")) {
                     if (player != null) {
-                        String qq = BotBind.getBindQQ(player.getName());
-                        if (qq != null) {
-                            subImgPath = subImgPath.replace("{qq}", qq.toLowerCase());
+                        String playerName = player.getName();
+                        if (playerName != null) {
+                            String qq = BotBind.getBindQQ(playerName);
+                            if (qq != null) {
+                                subImgPath = subImgPath.replace("{qq}", qq.toLowerCase());
+                            }
                         }
                     }
                     image = downloadImage(subImgPath.substring(5));
@@ -187,6 +209,9 @@ public class CustomImage implements Cloneable, Serializable {
                     File imageFolder = new File(XinxinCustomMessage.getInstance().getDataFolder(), "images");
                     File imageFile = new File(imageFolder, subImgPath);
                     image = ImageIO.read(imageFile);
+                    if (image == null && XinxinCustomMessage.getInstance().getConfig().getBoolean("debug")) {
+                        XinxinCustomMessage.getInstance().getLogger().warning("无法加载子图片: " + subImgPath);
+                    }
                 }
 
                 int w = subImage.width;
@@ -215,9 +240,12 @@ public class CustomImage implements Cloneable, Serializable {
                 try {
                     if (player != null) {
                         text = PlaceholderAPI.setPlaceholders(player, text);
-                        String qq = BotBind.getBindQQ(player.getName());
-                        if (qq != null) {
-                            text = text.replace("{qq}", qq);
+                        String playerName = player.getName();
+                        if (playerName != null) {
+                            String qq = BotBind.getBindQQ(playerName);
+                            if (qq != null) {
+                                text = text.replace("{qq}", qq);
+                            }
                         }
                     }
                 } catch (IllegalStateException e) {

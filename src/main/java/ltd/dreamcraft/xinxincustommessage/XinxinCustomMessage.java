@@ -10,13 +10,13 @@ import ltd.dreamcraft.xinxincustommessage.objects.CustomMessage;
 import ltd.dreamcraft.xinxincustommessage.objects.CustomText;
 import ltd.dreamcraft.xinxincustommessage.objects.SubImage;
 import ltd.dreamcraft.xinxincustommessage.utils.Metrics;
+import me.clip.placeholderapi.PlaceholderAPI;
 import org.bukkit.Bukkit;
 import org.bukkit.command.Command;
 import org.bukkit.command.CommandSender;
 import org.bukkit.configuration.Configuration;
 import org.bukkit.configuration.ConfigurationSection;
 import org.bukkit.configuration.file.YamlConfiguration;
-import org.bukkit.plugin.Plugin;
 import org.bukkit.plugin.java.JavaPlugin;
 import org.jetbrains.annotations.NotNull;
 
@@ -467,23 +467,18 @@ public class XinxinCustomMessage extends JavaPlugin {
     }
 
     public void onDisable() {
-        String version = getPluginVersion("PlaceHolderAPI");
-        customHook.unregister();
+        try {
+            customHook.unregister();
+        } catch (Exception e) {
+
+            PlaceholderAPI.unregisterPlaceholderHook(this);
+        }
         DataManager.saveCounts();
     }
 
-    private static String getPluginVersion(String pluginName) {
-        // 获取插件管理器
-        Plugin targetPlugin = Bukkit.getPluginManager().getPlugin(pluginName);
 
-        // 检查插件是否存在
-        if (targetPlugin != null && targetPlugin.isEnabled()) {
-            // 返回插件的版本号
-            return targetPlugin.getDescription().getVersion();
-        } else {
-            return "插件未找到或未启用";
-        }
-    }
+
+
 
     public boolean onCommand(@NotNull CommandSender sender, @NotNull Command command, @NotNull String label, @NotNull String[] args) {
         if (args.length == 1 && sender.hasPermission("xinxincustommessages.admin")) {

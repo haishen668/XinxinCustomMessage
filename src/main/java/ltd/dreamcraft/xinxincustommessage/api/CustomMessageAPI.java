@@ -32,6 +32,9 @@ public class CustomMessageAPI {
             return false;
         }
         OfflinePlayer player = Bukkit.getOfflinePlayer(playerName);
+        if (player.getName() == null) {
+            player = null;
+        }
         long id = GroupId;
         String userID = BotBind.getBindQQ(playerName);
         if (userID == null || userID.isEmpty()) {
@@ -41,7 +44,8 @@ public class CustomMessageAPI {
         if (!userID.equals("0")) {
             GroupMemberInfo groupMemberInfo = BotAction.getGroupMemberInfo(id, Long.parseLong(userID), true);
             if (groupMemberInfo != null) {
-                nickName = groupMemberInfo.getNickname();
+                String nick = groupMemberInfo.getNickname();
+                nickName = (nick != null) ? nick : "";
             }
         }
 

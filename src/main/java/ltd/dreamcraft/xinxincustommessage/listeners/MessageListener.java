@@ -132,20 +132,30 @@ public class MessageListener implements Listener {
 
                 if (customMessage.admins.isEmpty() || customMessage.admins.contains(userIdProxy)) {
                     String bindPlayerName = BotBind.getBindPlayerName(String.valueOf(userIdProxy));
-                    String extra = !regex ? message : ""; //正则没匹配到就返回 message
+                    String extra = !regex ? message : "";
                     if (customMessage.unbind_messages.isEmpty() || bindPlayerName != null) {
                         if (customMessage.scripts.isEmpty()) {
                             MessageUtil.sendMessage(customMessage.responses, event.getGroup_id(), userIdProxy, bindPlayerName, extra);
                             return;
+                        } else if (bindPlayerName == null) {
+                            // 脚本需要玩家但未绑定，走未绑定消息
+                            if (!customMessage.unbind_messages.isEmpty()) {
+                                MessageUtil.sendMessage(customMessage.unbind_messages, event.getGroup_id(), userIdProxy, null, extra);
+                            } else {
+                                MessageUtil.sendMessage(customMessage.responses, event.getGroup_id(), userIdProxy, null, extra);
+                            }
+                            return;
                         } else {
                             ScriptEngine scriptEngine = XinxinCustomMessage.getScriptEngine();
+                            if (scriptEngine == null) {
+                                MessageUtil.sendMessage(customMessage.responses, event.getGroup_id(), userIdProxy, bindPlayerName, extra);
+                                return;
+                            }
                             List<String> scripts = customMessage.getScripts();
                             OfflinePlayer offlinePlayer = Bukkit.getOfflinePlayer(bindPlayerName);
                             for (String script : scripts) {
-                                // 替换{extra}占位符
                                 script = script.replaceAll("\\{extra}", extra);
-                                script = PlaceholderAPI.setPlaceholders(offlinePlayer, script); // 解析papi变量 和
-                                // script == %player_level% >= 50 -> msg:&7您需到达50级才可领取本邮件
+                                script = PlaceholderAPI.setPlaceholders(offlinePlayer, script);
                                 String[] splitScript = script.split("->");
                                 if (splitScript.length > 1) {
                                     String conditionScript = splitScript[0];
@@ -154,9 +164,7 @@ public class MessageListener implements Listener {
                                         if (evaluationResult instanceof Boolean) {
                                             boolean conditionMet = (boolean) evaluationResult;
                                             if (!conditionMet) {
-                                                // 条件不符合 执行下方语句
                                                 String executeScript = splitScript[1];
-                                                // 使用自制脚本解析器解析
                                                 ScriptUtil.execute(event.getGroup_id(), executeScript);
                                                 return;
                                             }

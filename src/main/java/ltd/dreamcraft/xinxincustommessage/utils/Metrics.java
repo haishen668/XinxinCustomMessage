@@ -345,29 +345,33 @@ public class Metrics {
             }
             String url = String.format(REPORT_URL, platform);
             HttpsURLConnection connection = (HttpsURLConnection) new URL(url).openConnection();
-            // Compress the data to save bandwidth
-            byte[] compressedData = compress(data.toString());
-            connection.setRequestMethod("POST");
-            connection.addRequestProperty("Accept", "application/json");
-            connection.addRequestProperty("Connection", "close");
-            connection.addRequestProperty("Content-Encoding", "gzip");
-            connection.addRequestProperty("Content-Length", String.valueOf(compressedData.length));
-            connection.setRequestProperty("Content-Type", "application/json");
-            connection.setRequestProperty("User-Agent", "Metrics-Service/1");
-            connection.setDoOutput(true);
-            try (DataOutputStream outputStream = new DataOutputStream(connection.getOutputStream())) {
-                outputStream.write(compressedData);
-            }
-            StringBuilder builder = new StringBuilder();
-            try (BufferedReader bufferedReader =
-                         new BufferedReader(new InputStreamReader(connection.getInputStream()))) {
-                String line;
-                while ((line = bufferedReader.readLine()) != null) {
-                    builder.append(line);
+            try {
+                // Compress the data to save bandwidth
+                byte[] compressedData = compress(data.toString());
+                connection.setRequestMethod("POST");
+                connection.addRequestProperty("Accept", "application/json");
+                connection.addRequestProperty("Connection", "close");
+                connection.addRequestProperty("Content-Encoding", "gzip");
+                connection.addRequestProperty("Content-Length", String.valueOf(compressedData.length));
+                connection.setRequestProperty("Content-Type", "application/json");
+                connection.setRequestProperty("User-Agent", "Metrics-Service/1");
+                connection.setDoOutput(true);
+                try (DataOutputStream outputStream = new DataOutputStream(connection.getOutputStream())) {
+                    outputStream.write(compressedData);
                 }
-            }
-            if (logResponseStatusText) {
-                infoLogger.accept("Sent data to bStats and received response: " + builder);
+                StringBuilder builder = new StringBuilder();
+                try (BufferedReader bufferedReader =
+                             new BufferedReader(new InputStreamReader(connection.getInputStream()))) {
+                    String line;
+                    while ((line = bufferedReader.readLine()) != null) {
+                        builder.append(line);
+                    }
+                }
+                if (logResponseStatusText) {
+                    infoLogger.accept("Sent data to bStats and received response: " + builder);
+                }
+            } finally {
+                connection.disconnect();
             }
         }
 

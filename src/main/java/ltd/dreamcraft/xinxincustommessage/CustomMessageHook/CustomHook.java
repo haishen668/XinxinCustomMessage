@@ -51,20 +51,14 @@ public class CustomHook extends PlaceholderExpansion {
                 return "";
             }
         }
-        //图片模板调用次数
         if ("invokeCounts_images".equalsIgnoreCase(identifier)) {
-            Integer images = DataManager.invokeCountsMap.get("images");
-            return String.valueOf(images);
+            return String.valueOf(DataManager.getCount("images"));
         }
-        //模板总调用次数
         if ("invokeCounts_total".equalsIgnoreCase(identifier)) {
-            Integer total = DataManager.invokeCountsMap.get("total");
-            return String.valueOf(total);
+            return String.valueOf(DataManager.getCount("total"));
         }
-        //文本模板调用次数
         if ("invokeCounts_texts".equalsIgnoreCase(identifier)) {
-            Integer texts = DataManager.invokeCountsMap.get("total") - DataManager.invokeCountsMap.get("images");
-            return String.valueOf(texts);
+            return String.valueOf(DataManager.getCount("total") - DataManager.getCount("images"));
         }
 
 
@@ -72,39 +66,30 @@ public class CustomHook extends PlaceholderExpansion {
     }
 
     public static String getUUID(String username) throws Exception {
-        // API URL
         String url = "https://api.ashcon.app/mojang/v2/user/" + username;
+        HttpURLConnection con = (HttpURLConnection) new URL(url).openConnection();
+        try {
+            con.setRequestMethod("GET");
+            con.setConnectTimeout(5000);
+            con.setReadTimeout(5000);
 
-        // 创建一个URL对象
-        URL obj = new URL(url);
-        HttpURLConnection con = (HttpURLConnection) obj.openConnection();
-
-        // 设置请求类型为GET
-        con.setRequestMethod("GET");
-
-        // 获取响应码
-        int responseCode = con.getResponseCode();
-        if (responseCode == HttpURLConnection.HTTP_OK) { // success
-            // 读取响应内容
-            BufferedReader in = new BufferedReader(new InputStreamReader(con.getInputStream()));
-            String inputLine;
-            StringBuilder response = new StringBuilder();
-
-            while ((inputLine = in.readLine()) != null) {
-                response.append(inputLine);
+            int responseCode = con.getResponseCode();
+            if (responseCode == HttpURLConnection.HTTP_OK) {
+                try (BufferedReader in = new BufferedReader(new InputStreamReader(con.getInputStream()))) {
+                    String inputLine;
+                    StringBuilder response = new StringBuilder();
+                    while ((inputLine = in.readLine()) != null) {
+                        response.append(inputLine);
+                    }
+                    Gson gson = new Gson();
+                    JsonObject jsonObject = gson.fromJson(response.toString(), JsonObject.class);
+                    return jsonObject.get("uuid").getAsString();
+                }
+            } else {
+                throw new Exception("GET请求失败，响应码: " + responseCode);
             }
-            in.close();
-
-            // 使用 Gson 解析 JSON 响应
-            Gson gson = new Gson();
-            JsonObject jsonObject = gson.fromJson(response.toString(), JsonObject.class);
-
-            // 提取UUID
-            String uuid = jsonObject.get("uuid").getAsString();
-
-            return uuid;
-        } else {
-            throw new Exception("GET请求失败，响应码: " + responseCode);
+        } finally {
+            con.disconnect();
         }
     }
 

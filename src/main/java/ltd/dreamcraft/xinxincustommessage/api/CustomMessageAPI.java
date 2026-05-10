@@ -20,7 +20,6 @@ import static ltd.dreamcraft.xinxincustommessage.XinxinCustomMessage.customMessa
  */
 public class CustomMessageAPI {
     public static boolean sendCustomMessage(Long GroupId, String playerName, String messageId, String extra) {
-        long id;
         CustomMessage message = null;
         for (CustomMessage customMessage : customMessageList) {
             if (customMessage.getId().equalsIgnoreCase(messageId)) {
@@ -33,12 +32,7 @@ public class CustomMessageAPI {
             return false;
         }
         OfflinePlayer player = Bukkit.getOfflinePlayer(playerName);
-        try {
-            id = GroupId;
-        } catch (Exception ignored) {
-            System.out.println("§a群号必须为数字!");
-            return false;
-        }
+        long id = GroupId;
         String userID = BotBind.getBindQQ(playerName);
         if (userID == null || userID.isEmpty()) {
             userID = "0";
@@ -46,7 +40,9 @@ public class CustomMessageAPI {
         String nickName = "";
         if (!userID.equals("0")) {
             GroupMemberInfo groupMemberInfo = BotAction.getGroupMemberInfo(id, Long.parseLong(userID), true);
-            nickName = groupMemberInfo.getNickname();
+            if (groupMemberInfo != null) {
+                nickName = groupMemberInfo.getNickname();
+            }
         }
 
         List<String> response = MessageUtil.getMsg(message.getResponses(), player, id, Long.parseLong(userID), nickName, extra);
@@ -56,5 +52,3 @@ public class CustomMessageAPI {
     }
 
 }
-
-

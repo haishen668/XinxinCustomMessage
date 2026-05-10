@@ -57,7 +57,7 @@ public class MessageUtil {
                     //渲染图片
                     BufferedImage image = customImage.renderImage(offlinePlayer,extra);
                     // 计数图片信息数量
-                    DataManager.invokeCountsMap.put("images", DataManager.invokeCountsMap.get("images") + 1);
+                    DataManager.increment("images");
                     response.add(bufferedImgToMsg(image));
                 } catch (Exception e) {
                     if (XinxinCustomMessage.getInstance().getConfig().getBoolean("debug"))
@@ -75,7 +75,7 @@ public class MessageUtil {
             response.add(s);
         }
         //TODO 计数消息模板发送次数
-        DataManager.invokeCountsMap.put("total", DataManager.invokeCountsMap.get("total") + 1);
+        DataManager.increment("total");
         return response;
     }
 

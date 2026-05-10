@@ -54,26 +54,12 @@ public class CustomMessage {
         return scripts;
     }
 
-    /**
-     * 两个对象相等的条件：
-     * 1. 引用相同（地址相同）。
-     * 2. 类型相同且所有关键字段相等。
-     */
     @Override
     public boolean equals(Object o) {
-        if (this == o) {
-            return true;
-        }
-        if (o == null || getClass() != o.getClass()) {
-            return false;
-        }
+        if (this == o) return true;
+        if (o == null || getClass() != o.getClass()) return false;
         CustomMessage that = (CustomMessage) o;
-        return Objects.equals(trigger, that.trigger) &&
-                Objects.equals(responses, that.responses) &&
-                Objects.equals(unbind_messages, that.unbind_messages) &&
-                Objects.equals(groups, that.groups) &&
-                Objects.equals(admins, that.admins) &&
-                Objects.equals(scripts, that.scripts);
+        return Objects.equals(trigger, that.trigger);
     }
 
     @Override

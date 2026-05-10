@@ -44,10 +44,10 @@ import java.util.zip.ZipFile;
 public class XinxinCustomMessage extends JavaPlugin {
     public static XinxinCustomMessage instance;
 
-    public static Set<CustomMessage> customMessageList = ConcurrentHashMap.newKeySet();
+    public static volatile Set<CustomMessage> customMessageList = ConcurrentHashMap.newKeySet();
 
-    public static Set<CustomImage> customImageList = ConcurrentHashMap.newKeySet();
-    public static Map<String, Font> customFontList = new HashMap<>();
+    public static volatile Set<CustomImage> customImageList = ConcurrentHashMap.newKeySet();
+    public static volatile Map<String, Font> customFontList = new HashMap<>();
     public static boolean LOG = false;
     private static ScriptEngine scriptEngine;
     private static CustomHook customHook;
@@ -56,7 +56,7 @@ public class XinxinCustomMessage extends JavaPlugin {
     }
 
     public static void loadAllFonts() {
-        customFontList.clear();
+        Map<String, Font> newFonts = new HashMap<>();
         File directory = new File(XinxinCustomMessage.getInstance().getDataFolder(), "fonts");
         if (!directory.exists()) {
             directory.mkdir();
@@ -67,7 +67,7 @@ public class XinxinCustomMessage extends JavaPlugin {
                 if (file.isFile() && file.getName().toLowerCase().endsWith(".ttf")) {
                     try {
                         Font font = Font.createFont(Font.TRUETYPE_FONT, file);
-                        customFontList.put(file.getName().replaceAll("\\.t(t|T)f", "").trim(), font);
+                        newFonts.put(file.getName().replaceAll("\\.t(t|T)f", "").trim(), font);
                     } catch (FontFormatException | IOException e) {
                         XinxinCustomMessage.getInstance().getLogger().severe(file.getName() + "可能不是一个font文件");
                         e.printStackTrace();
@@ -75,6 +75,7 @@ public class XinxinCustomMessage extends JavaPlugin {
                 }
             }
         }
+        customFontList = newFonts;
     }
 
 
@@ -127,7 +128,7 @@ public class XinxinCustomMessage extends JavaPlugin {
         return customTextList;
     }
 
-    public static void loadCustomMessage(Configuration config) {
+    public static void loadCustomMessage(Configuration config, Set<CustomMessage> messagesOut, Set<CustomImage> imagesOut) {
         ConfigurationSection messages = config.getConfigurationSection("custom_messages");
         if (messages != null) {
             for (String key : messages.getKeys(false)) {
@@ -138,7 +139,7 @@ public class XinxinCustomMessage extends JavaPlugin {
                 List<Long> admins = messages.contains(key + ".admins") ? messages.getLongList(key + ".admins") : Collections.emptyList();
                 List<String> scripts = messages.contains(key + ".scripts") ? messages.getStringList(key + ".scripts") : Collections.emptyList();
                 CustomMessage customMessage = new CustomMessage(trigger, responses, unbindMessages, groups, key, admins, scripts);
-                customMessageList.add(customMessage);
+                messagesOut.add(customMessage);
             }
         }
         ConfigurationSection customImages = config.getConfigurationSection("custom_images");
@@ -148,15 +149,15 @@ public class XinxinCustomMessage extends JavaPlugin {
                 int width = config.getInt("custom_images." + key + ".width");
                 int height = config.getInt("custom_images." + key + ".height");
                 CustomImage customImage = new CustomImage(key, source, width, height, loadSubImage(config, key), loadCustomTexts(config, key));
-                customImageList.add(customImage);
+                imagesOut.add(customImage);
             }
         }
     }
 
     public static void loadCustomMessages() {
-        customMessageList.clear();
-        customImageList.clear();
-        loadCustomMessage(getInstance().getConfig());
+        Set<CustomMessage> newMessages = ConcurrentHashMap.newKeySet();
+        Set<CustomImage> newImages = ConcurrentHashMap.newKeySet();
+        loadCustomMessage(getInstance().getConfig(), newMessages, newImages);
         List<String> folders = getInstance().getConfig().getStringList("messagefolders");
         for (String name : folders) {
             File folder = new File(instance.getDataFolder(), name);
@@ -164,11 +165,13 @@ public class XinxinCustomMessage extends JavaPlugin {
                 continue;
             if (!folder.exists())
                 folder.mkdirs();
-            if (folder.isDirectory())
-                for (File file : Objects.requireNonNull(folder.listFiles())) {
+            if (folder.isDirectory()) {
+                File[] files = folder.listFiles();
+                if (files == null) continue;
+                for (File file : files) {
                     if (file.getName().endsWith(".yml"))
                         try {
-                            loadCustomMessage(YamlConfiguration.loadConfiguration(file));
+                            loadCustomMessage(YamlConfiguration.loadConfiguration(file), newMessages, newImages);
                         } catch (Exception e) {
                             if (getInstance().getConfig().getBoolean("debug")) {
                                 e.printStackTrace();
@@ -177,8 +180,11 @@ public class XinxinCustomMessage extends JavaPlugin {
                             }
                         }
                 }
+            }
         }
-        instance.getLogger().info("§a载入了" + customMessageList.size() + "条自定义信息以及" + customImageList.size() + "条自定义图片" + customFontList.size() + "个自定义字体");
+        customMessageList = newMessages;
+        customImageList = newImages;
+        instance.getLogger().info("§a载入了" + newMessages.size() + "条自定义信息以及" + newImages.size() + "条自定义图片" + customFontList.size() + "个自定义字体");
     }
 
     @Override
@@ -419,7 +425,7 @@ public class XinxinCustomMessage extends JavaPlugin {
      * @param totalBytes   总字节数
      */
     public void printProgress(String fileName, int currentBytes, int totalBytes) {
-        // 计算当前百分比
+        if (totalBytes <= 0) return;
         int percentage = (int) ((currentBytes / (double) totalBytes) * 100);
 
         // 获取或初始化 ProgressInfo
@@ -467,11 +473,12 @@ public class XinxinCustomMessage extends JavaPlugin {
     }
 
     public void onDisable() {
-        try {
-            customHook.unregister();
-        } catch (Exception e) {
-
-            PlaceholderAPI.unregisterPlaceholderHook(this);
+        if (customHook != null) {
+            try {
+                customHook.unregister();
+            } catch (Exception e) {
+                // ignore
+            }
         }
         DataManager.saveCounts();
     }
@@ -484,7 +491,6 @@ public class XinxinCustomMessage extends JavaPlugin {
         if (args.length == 1 && sender.hasPermission("xinxincustommessages.admin")) {
             if (args[0].equalsIgnoreCase("reload")) {
                 DataManager.saveCounts();
-                customFontList.clear();
                 reloadConfig();
                 loadAllFonts();
                 loadCustomMessages();
@@ -527,20 +533,28 @@ public class XinxinCustomMessage extends JavaPlugin {
         }
         if (args.length == 4 && sender.hasPermission("xinxincustommessages.send") && args[0].equalsIgnoreCase("send")) {
             Bukkit.getScheduler().runTaskAsynchronously(this, () -> {
-                if (CustomMessageAPI.sendCustomMessage(Long.parseLong(args[1]), args[2], args[3], "")) {
-                    sender.sendMessage("§a发送成功!");
-                } else {
-                    sender.sendMessage("§c消息id不存在或者群号不是数字");
+                try {
+                    if (CustomMessageAPI.sendCustomMessage(Long.parseLong(args[1]), args[2], args[3], "")) {
+                        sender.sendMessage("§a发送成功!");
+                    } else {
+                        sender.sendMessage("§c消息id不存在或者群号不是数字");
+                    }
+                } catch (NumberFormatException e) {
+                    sender.sendMessage("§c群号必须为数字");
                 }
             });
             return true;
         }
         if (args.length == 5 && sender.hasPermission("xinxincustommessages.send") && args[0].equalsIgnoreCase("send")) {
             Bukkit.getScheduler().runTaskAsynchronously(this, () -> {
-                if (CustomMessageAPI.sendCustomMessage(Long.parseLong(args[1]), args[2], args[3], args[4])) {
-                    sender.sendMessage("§a发送成功!");
-                } else {
-                    sender.sendMessage("§c消息id不存在或者群号不是数字");
+                try {
+                    if (CustomMessageAPI.sendCustomMessage(Long.parseLong(args[1]), args[2], args[3], args[4])) {
+                        sender.sendMessage("§a发送成功!");
+                    } else {
+                        sender.sendMessage("§c消息id不存在或者群号不是数字");
+                    }
+                } catch (NumberFormatException e) {
+                    sender.sendMessage("§c群号必须为数字");
                 }
             });
             return true;

@@ -98,15 +98,6 @@ public class MessageListener implements Listener {
                 if (matcher.find())
                     regex = true;
             }
-            // 新增一个图片识别
-            // if (customMessage.trigger.startsWith("[image]") && XinxinCustomMessage.getInstance().getConfig().getBoolean("ocr-scan")){
-            //     String message = customMessage.trigger.replace("[image]", "").trim();
-            //     String eventImgOCR = event.getImgOCR();
-            //     if (eventImgOCR.contains(message) || eventImgOCR.replace(" ","").toLowerCase().contains(message.toLowerCase())){
-            //         MessageUtil.sendMessage(customMessage.responses, event.getGroup_id(), event.getUser_id(), event.getSender().getName(),"");
-            //         continue;
-            //     }
-            //
             if (messageProxy.equalsIgnoreCase(customMessage.trigger) || regex || customMessage.trigger.contains("{extra}")) {
                 //信息和关键词完全匹配 || 符合正则表达式 || (是否包含{extra} => 关键词中包含触发器)
                 String message = messageProxy;

@@ -119,7 +119,7 @@ public class TextUtil {
                 }
             }
         } else {
-            return Color.black;
+            return Color.BLACK;
         }
         XinxinCustomMessage.getInstance().getLogger().warning("无效的颜色码: " + colorCode + ", 使用默认黑色");
         return Color.BLACK;

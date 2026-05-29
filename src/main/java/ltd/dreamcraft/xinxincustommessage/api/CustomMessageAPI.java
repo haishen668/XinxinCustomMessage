@@ -35,23 +35,22 @@ public class CustomMessageAPI {
         if (player.getName() == null) {
             player = null;
         }
-        long id = GroupId;
         String userID = BotBind.getBindQQ(playerName);
         if (userID == null || userID.isEmpty()) {
             userID = "0";
         }
         String nickName = "";
         if (!userID.equals("0")) {
-            GroupMemberInfo groupMemberInfo = BotAction.getGroupMemberInfo(id, Long.parseLong(userID), true);
+            GroupMemberInfo groupMemberInfo = BotAction.getGroupMemberInfo(GroupId, Long.parseLong(userID), true);
             if (groupMemberInfo != null) {
                 String nick = groupMemberInfo.getNickname();
                 nickName = (nick != null) ? nick : "";
             }
         }
 
-        List<String> response = MessageUtil.getMsg(message.getResponses(), player, id, Long.parseLong(userID), nickName, extra);
+        List<String> response = MessageUtil.getMsg(message.getResponses(), player, GroupId, Long.parseLong(userID), nickName, extra);
         if (!response.isEmpty())
-            BotAction.sendGroupMessage((int) id, response, true);
+            BotAction.sendGroupMessage(GroupId, response, true);
         return true;
     }
 

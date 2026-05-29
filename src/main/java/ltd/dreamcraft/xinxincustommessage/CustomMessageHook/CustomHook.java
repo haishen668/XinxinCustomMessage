@@ -92,8 +92,4 @@ public class CustomHook extends PlaceholderExpansion {
             con.disconnect();
         }
     }
-
-
-
-
 }

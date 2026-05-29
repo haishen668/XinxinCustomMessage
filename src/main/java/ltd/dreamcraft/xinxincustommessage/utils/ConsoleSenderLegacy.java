@@ -16,7 +16,6 @@ import org.bukkit.scheduler.BukkitTask;
 import org.jetbrains.annotations.NotNull;
 
 import java.util.ArrayList;
-import java.util.Iterator;
 import java.util.Optional;
 import java.util.Set;
 
@@ -29,8 +28,8 @@ import java.util.Set;
 public class ConsoleSenderLegacy implements ConsoleCommandSender {
     private final long contactID;
     private final boolean isGroup;
-    private final ArrayList<String> output = new ArrayList();
-    private final ArrayList<String> tempOutPut = new ArrayList();
+    private final ArrayList<String> output = new ArrayList<>();
+    private final ArrayList<String> tempOutPut = new ArrayList<>();
     private BukkitTask task = null;
 
     public ConsoleSenderLegacy(long contactID, boolean isGroup) {
@@ -72,10 +71,7 @@ public class ConsoleSenderLegacy implements ConsoleCommandSender {
                 }
 
                 StringBuilder response = new StringBuilder();
-                Iterator var3 = this.output.iterator();
-
-                while (var3.hasNext()) {
-                    String s = (String) var3.next();
+                for (String s : this.output) {
                     response.append(s.replaceAll("§\\S", "")).append("\n");
                 }
 
@@ -95,14 +91,9 @@ public class ConsoleSenderLegacy implements ConsoleCommandSender {
     }
 
     public void sendMessage(String[] messages) {
-        String[] var2 = messages;
-        int var3 = messages.length;
-
-        for (int var4 = 0; var4 < var3; ++var4) {
-            String msg = var2[var4];
+        for (String msg : messages) {
             this.sendMessage(msg);
         }
-
     }
 
     public boolean isPermissionSet(@NotNull String s) {

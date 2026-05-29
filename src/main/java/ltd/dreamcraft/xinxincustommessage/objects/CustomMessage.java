@@ -67,5 +67,3 @@ public class CustomMessage {
         return Objects.hash(trigger);
     }
 }
-
-

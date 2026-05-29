@@ -6,10 +6,7 @@ import com.xinxin.BotApi.BotBind;
 import ltd.dreamcraft.xinxincustommessage.Managers.DataManager;
 import ltd.dreamcraft.xinxincustommessage.XinxinCustomMessage;
 import ltd.dreamcraft.xinxincustommessage.objects.CustomImage;
-import ltd.dreamcraft.xinxincustommessage.objects.CustomText;
-import ltd.dreamcraft.xinxincustommessage.objects.SubImage;
 import me.clip.placeholderapi.PlaceholderAPI;
-import org.apache.commons.lang3.SerializationUtils;
 import org.bukkit.Bukkit;
 import org.bukkit.OfflinePlayer;
 import org.bukkit.command.CommandSender;
@@ -74,7 +71,6 @@ public class MessageUtil {
             }
             response.add(s);
         }
-        //TODO 计数消息模板发送次数
         DataManager.increment("total");
         return response;
     }
@@ -114,5 +110,3 @@ public class MessageUtil {
     }
 
 }
-
-

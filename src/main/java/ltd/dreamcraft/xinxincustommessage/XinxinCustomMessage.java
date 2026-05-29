@@ -10,7 +10,6 @@ import ltd.dreamcraft.xinxincustommessage.objects.CustomMessage;
 import ltd.dreamcraft.xinxincustommessage.objects.CustomText;
 import ltd.dreamcraft.xinxincustommessage.objects.SubImage;
 import ltd.dreamcraft.xinxincustommessage.utils.Metrics;
-import me.clip.placeholderapi.PlaceholderAPI;
 import org.bukkit.Bukkit;
 import org.bukkit.command.Command;
 import org.bukkit.command.CommandSender;
@@ -274,7 +273,6 @@ public class XinxinCustomMessage extends JavaPlugin {
         // 定义尝试的编码顺序
         Charset[] charsets = {Charset.forName("GBK"), StandardCharsets.UTF_8};
         boolean success = false;
-        IOException exception = null;
 
         for (Charset charset : charsets) {
             try (ZipFile zipFile = new ZipFile(zipFilePath, charset)) {
@@ -385,7 +383,10 @@ public class XinxinCustomMessage extends JavaPlugin {
                     return true; // 下载成功
                 }
             } catch (IOException ex) {
-                Bukkit.getConsoleSender().sendMessage("§f[§e" + this.getName() + "§f]§7 " + fileName + " §c下载失败");
+                Bukkit.getConsoleSender().sendMessage("§f[§e" + this.getName() + "§f]§7 " + fileName + " §c下载失败: " + ex.getMessage());
+                if (getConfig().getBoolean("debug")) {
+                    ex.printStackTrace();
+                }
                 return false; // 下载失败
             } finally {
                 if (connection instanceof java.net.HttpURLConnection) {
@@ -488,10 +489,6 @@ public class XinxinCustomMessage extends JavaPlugin {
         DataManager.saveCounts();
     }
 
-
-
-
-
     public boolean onCommand(@NotNull CommandSender sender, @NotNull Command command, @NotNull String label, @NotNull String[] args) {
         if (args.length == 1 && sender.hasPermission("xinxincustommessages.admin")) {
             if (args[0].equalsIgnoreCase("reload")) {
@@ -536,24 +533,11 @@ public class XinxinCustomMessage extends JavaPlugin {
                 return true;
             }
         }
-        if (args.length == 4 && sender.hasPermission("xinxincustommessages.send") && args[0].equalsIgnoreCase("send")) {
+        if ((args.length == 4 || args.length == 5) && sender.hasPermission("xinxincustommessages.send") && args[0].equalsIgnoreCase("send")) {
+            String extra = args.length == 5 ? args[4] : "";
             Bukkit.getScheduler().runTaskAsynchronously(this, () -> {
                 try {
-                    if (CustomMessageAPI.sendCustomMessage(Long.parseLong(args[1]), args[2], args[3], "")) {
-                        sender.sendMessage("§a发送成功!");
-                    } else {
-                        sender.sendMessage("§c消息id不存在或者群号不是数字");
-                    }
-                } catch (NumberFormatException e) {
-                    sender.sendMessage("§c群号必须为数字");
-                }
-            });
-            return true;
-        }
-        if (args.length == 5 && sender.hasPermission("xinxincustommessages.send") && args[0].equalsIgnoreCase("send")) {
-            Bukkit.getScheduler().runTaskAsynchronously(this, () -> {
-                try {
-                    if (CustomMessageAPI.sendCustomMessage(Long.parseLong(args[1]), args[2], args[3], args[4])) {
+                    if (CustomMessageAPI.sendCustomMessage(Long.parseLong(args[1]), args[2], args[3], extra)) {
                         sender.sendMessage("§a发送成功!");
                     } else {
                         sender.sendMessage("§c消息id不存在或者群号不是数字");
@@ -593,5 +577,3 @@ public class XinxinCustomMessage extends JavaPlugin {
         XinxinCustomMessage.scriptEngine = scriptEngine;
     }
 }
-
-

@@ -17,7 +17,6 @@ import org.bukkit.scheduler.BukkitTask;
 import org.jetbrains.annotations.NotNull;
 
 import java.util.ArrayList;
-import java.util.Iterator;
 import java.util.Optional;
 import java.util.Set;
 
@@ -70,10 +69,7 @@ public class ConsoleSender implements ConsoleCommandSender {
                 }
 
                 StringBuilder response = new StringBuilder();
-                Iterator var3 = this.output.iterator();
-
-                while (var3.hasNext()) {
-                    String s = (String) var3.next();
+                for (String s : this.output) {
                     response.append(s.replaceAll("§\\S", "")).append("\n");
                 }
 
@@ -93,14 +89,9 @@ public class ConsoleSender implements ConsoleCommandSender {
     }
 
     public void sendMessage(String[] messages) {
-        String[] var2 = messages;
-        int var3 = messages.length;
-
-        for (int var4 = 0; var4 < var3; ++var4) {
-            String msg = var2[var4];
+        for (String msg : messages) {
             this.sendMessage(msg);
         }
-
     }
 
     public boolean isPermissionSet(@NotNull String s) {
@@ -143,14 +134,9 @@ public class ConsoleSender implements ConsoleCommandSender {
             }
 
             public void sendMessage(BaseComponent... components) {
-                BaseComponent[] var2 = components;
-                int var3 = components.length;
-
-                for (int var4 = 0; var4 < var3; ++var4) {
-                    BaseComponent baseComponent = var2[var4];
+                for (BaseComponent baseComponent : components) {
                     this.sendMessage(baseComponent);
                 }
-
             }
         };
     }

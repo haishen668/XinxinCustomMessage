@@ -154,7 +154,7 @@ public class MessageListener implements Listener {
                                         Object evaluationResult = scriptEngine.eval(conditionScript);
                                         if (evaluationResult instanceof Boolean) {
                                             boolean conditionMet = (boolean) evaluationResult;
-                                            if (!conditionMet) {
+                                            if (conditionMet) {
                                                 String executeScript = splitScript[1];
                                                 ScriptUtil.execute(event.getGroup_id(), executeScript);
                                                 return;

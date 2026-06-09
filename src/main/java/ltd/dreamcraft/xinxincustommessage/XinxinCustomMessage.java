@@ -31,6 +31,7 @@ import java.net.URLConnection;
 import java.nio.charset.Charset;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
+import java.nio.file.StandardCopyOption;
 import java.util.List;
 import java.util.*;
 import java.util.concurrent.ConcurrentHashMap;
@@ -264,11 +265,15 @@ public class XinxinCustomMessage extends JavaPlugin {
      * @throws IOException 如果解压过程中发生IO错误
      */
     public void unzip(String zipFilePath, boolean delete) throws IOException {
-        // 创建解压后文件的目标文件夹
-        File destDir = new File(zipFilePath.substring(0, zipFilePath.lastIndexOf("/")));
+        File sourceZip = new File(zipFilePath);
+        File destDir = sourceZip.getParentFile();
+        if (destDir == null) {
+            destDir = new File(".");
+        }
         if (!destDir.exists()) {
             destDir.mkdirs(); // 如果目标文件夹不存在，则创建
         }
+        String canonicalDestDir = destDir.getCanonicalPath();
 
         // 定义尝试的编码顺序
         Charset[] charsets = {Charset.forName("GBK"), StandardCharsets.UTF_8};
@@ -283,6 +288,11 @@ public class XinxinCustomMessage extends JavaPlugin {
                     ZipEntry entry = entries.nextElement();
                     // 生成解压后的目标文件路径
                     File entryDestination = new File(destDir, entry.getName());
+                    String canonicalEntryPath = entryDestination.getCanonicalPath();
+                    if (!canonicalEntryPath.startsWith(destDir.getCanonicalPath() + File.separator)
+                            && !canonicalEntryPath.equals(canonicalDestDir)) {
+                        throw new IOException("ZIP条目路径非法: " + entry.getName());
+                    }
 
                     // 如果是文件夹，创建文件夹
                     if (entry.isDirectory()) {
@@ -357,9 +367,12 @@ public class XinxinCustomMessage extends JavaPlugin {
 
         if (!outFile.exists() || replace) {
             URLConnection connection = null;
+            File tempFile = new File(outFile.getAbsolutePath() + ".download");
             try {
                 URL website = new URL(url);
                 connection = website.openConnection();
+                connection.setConnectTimeout(20000);
+                connection.setReadTimeout(20000);
                 int contentLength = connection.getContentLength();
 
                 if (contentLength == -1) {
@@ -367,7 +380,7 @@ public class XinxinCustomMessage extends JavaPlugin {
                 }
 
                 try (InputStream in = connection.getInputStream();
-                     OutputStream out = Files.newOutputStream(outFile.toPath())) {
+                     OutputStream out = Files.newOutputStream(tempFile.toPath())) {
 
                     printProgress(fileName, 0, contentLength);
 
@@ -379,6 +392,7 @@ public class XinxinCustomMessage extends JavaPlugin {
                         totalBytesRead += bytesRead;
                         printProgress(fileName, totalBytesRead, contentLength);
                     }
+                    Files.move(tempFile.toPath(), outFile.toPath(), StandardCopyOption.REPLACE_EXISTING);
                     Bukkit.getConsoleSender().sendMessage("§f[§e" + this.getName() + "§f] §7" + fileName + " §a下载成功");
                     return true; // 下载成功
                 }
@@ -386,6 +400,10 @@ public class XinxinCustomMessage extends JavaPlugin {
                 Bukkit.getConsoleSender().sendMessage("§f[§e" + this.getName() + "§f]§7 " + fileName + " §c下载失败: " + ex.getMessage());
                 if (getConfig().getBoolean("debug")) {
                     ex.printStackTrace();
+                }
+                try {
+                    Files.deleteIfExists(tempFile.toPath());
+                } catch (IOException ignored) {
                 }
                 return false; // 下载失败
             } finally {

@@ -125,7 +125,7 @@ public class CustomImage implements Cloneable, Serializable {
         boolean hasExtra = extra != null && !extra.isEmpty();
 
         if (hasExtra) {
-            path = path.replaceAll("\\{extra}", extra);
+            path = path.replace("{extra}", extra);
         }
 
         if (player != null) {
@@ -169,7 +169,7 @@ public class CustomImage implements Cloneable, Serializable {
                 BufferedImage image = null;
                 String subImgPath = subImage.path;
                 if (hasExtra) {
-                    subImgPath = subImgPath.replaceAll("\\{extra}", extra);
+                    subImgPath = subImgPath.replace("{extra}", extra);
                 }
 
                 if (player != null) {
@@ -234,7 +234,7 @@ public class CustomImage implements Cloneable, Serializable {
                 String text = customText.text;
 
                 if (hasExtra) {
-                    text = text.replaceAll("\\{extra}", extra);
+                    text = text.replace("{extra}", extra);
                 }
 
                 try {

@@ -145,7 +145,7 @@ public class MessageListener implements Listener {
                             List<String> scripts = customMessage.getScripts();
                             OfflinePlayer offlinePlayer = Bukkit.getOfflinePlayer(bindPlayerName);
                             for (String script : scripts) {
-                                script = script.replaceAll("\\{extra}", extra);
+                                script = script.replace("{extra}", extra);
                                 script = PlaceholderAPI.setPlaceholders(offlinePlayer, script);
                                 String[] splitScript = script.split("->");
                                 if (splitScript.length > 1) {

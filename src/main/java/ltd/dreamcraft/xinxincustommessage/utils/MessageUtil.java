@@ -66,7 +66,16 @@ public class MessageUtil {
                 //命令执行类型
                 String cmd = s.replace("[command]", "").trim();
                 CommandSender commandSender = OnCommand.getSender(groupID, true);
-                Bukkit.getScheduler().runTask(XinxinCustomMessage.getInstance(), () -> Bukkit.dispatchCommand(commandSender, cmd));
+                if (cmd.startsWith("[") && cmd.endsWith("]")) {
+                    String[] commandArgs = cmd.substring(1, cmd.length() - 1).split(",");
+                    Bukkit.getScheduler().runTask(XinxinCustomMessage.getInstance(), () -> {
+                        for (String subCommand : commandArgs) {
+                            Bukkit.dispatchCommand(commandSender, subCommand.trim());
+                        }
+                    });
+                } else {
+                    Bukkit.getScheduler().runTask(XinxinCustomMessage.getInstance(), () -> Bukkit.dispatchCommand(commandSender, cmd));
+                }
                 continue;
             }
             response.add(s);
